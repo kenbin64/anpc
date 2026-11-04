@@ -1,0 +1,55 @@
+<!--
+  #transcriptBox and #commandBox are TEMPLATE REFERENCES. viewChild('transcriptBox') finds the first in the
+  class. #commandBox is handed straight to submit(), so the class can read and clear the box.
+  (keydown.enter) is event binding with a key filter: only Enter triggers it.
+  [appCommandHistory] attaches the directive and gives it the list of past commands.
+  @for with track $index: transcript lines have no ids, and they're only ever added at the end.
+-->
+<section class="play">
+  <div class="main-column">
+    <div class="transcript panel" #transcriptBox aria-live="polite" aria-label="What has happened">
+      @if (!session.ready()) {
+        <p class="muted">Opening the world...</p>
+      }
+      @for (line of session.transcript(); track $index) {
+        <app-transcript-line [line]="line" />
+      }
+      @if (session.busy()) {
+        <p class="muted thinking">...</p>
+      }
+    </div>
+
+    <div class="command-row">
+      <label class="sr-only" for="command">What do you do?</label>
+      <input #commandBox id="command" type="text" autocomplete="off" placeholder="What do you do? (type help)"
+             [appCommandHistory]="pastCommands()" [disabled]="!session.ready()"
+             (keydown.enter)="submit(commandBox)" />
+      <button type="button" [disabled]="session.busy() || !session.ready()" (click)="submit(commandBox)">Go</button>
+    </div>
+  </div>
+
+  <aside class="side panel" aria-label="Your situation">
+    <h1>{{ session.worldName() }}</h1>
+    @if (session.player(); as player) {
+      <p><strong>{{ player.name }}</strong><br /><span class="muted">{{ player.description }}</span></p>
+    }
+    <dl>
+      <dt>When</dt><dd>{{ session.hour() | timeOfDay }}, {{ session.date() }}</dd>
+      <dt>Where</dt><dd>{{ session.place() }}</dd>
+      <dt>Purse</dt><dd>{{ session.purse() }}</dd>
+    </dl>
+    @if (session.objective()) {
+      <p class="objective"><strong>Objective:</strong> {{ session.objective() }}</p>
+    }
+    <h2>Here</h2>
+    <ul class="people">
+      @for (person of session.peopleHere(); track person.id) {
+        <li><a [routerLink]="['people', person.id]">{{ person.name }}</a>
+          @if (person.occupation) { <span class="muted">, {{ person.occupation.title }}</span> }</li>
+      } @empty {
+        <li class="muted">Nobody you know.</li>
+      }
+    </ul>
+    <a routerLink="/" class="leave">Leave (the world keeps living)</a>
+  </aside>
+</section>

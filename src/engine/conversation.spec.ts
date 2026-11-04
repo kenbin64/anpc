@@ -60,6 +60,18 @@ describe('strange talk reactions', () => {
   });
 });
 
+describe('first meetings', () => {
+  it('an NPC meeting the player for the first time hears a stranger, not a name', async () => {
+    const { chat, shown } = createRecordingChat('Good day, stranger.');
+    const first = await talkToNpc(buildTestNpc(), wanderer, 'Good day', chat, createDice('t'), '1200-02-01', 'a forge village');
+    await talkToNpc(first.npc, wanderer, 'Good day again', chat, createDice('t'), '1200-02-02', 'a forge village');
+
+    expect(shown[0][1].content).toContain('A stranger you have never met before');
+    expect(shown[0][1].content).not.toContain('Kestrel');
+    expect(shown[1][1].content).toContain('Kestrel, a road-worn sellsword, whom you have spoken with before');
+  });
+});
+
 describe('talking to an NPC', () => {
   it('passes in-world talk to the model, answers, and builds a little trust', async () => {
     const { chat, shown } = createRecordingChat('Aye, by sundown, if you pay up front.');

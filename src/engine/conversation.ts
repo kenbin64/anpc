@@ -58,6 +58,7 @@ function describeTemperament(npc: Npc): string {
 
 function buildConversationPrompt(
   npc: Npc, player: PlayerCharacter, gate: GateResult, reaction: StrangeReaction | null, trust: number, setting: string,
+  firstMeeting: boolean,
 ): PromptMessage[] {
   const work = npc.occupation ? `, ${npc.occupation.title} at ${npc.occupation.workplace}` : '';
   const system = [
@@ -73,8 +74,11 @@ function buildConversationPrompt(
     `Answer only with what you say aloud, in 1 to 3 sentences, with the accent and turns of phrase natural to a ${npc.species} of ${setting}.`,
   ].join(' ');
   const trustNote = trust < 35 ? 'You do not trust this stranger.' : trust > 65 ? 'You have come to like this stranger.' : '';
+  const speaker = firstMeeting
+    ? `A stranger you have never met before, ${player.description}, says to you`
+    : `${player.name}, ${player.description}, whom you have spoken with before, says to you`;
   const user = [
-    `${player.name}, ${player.description}, says to you: "${gate.heardAs}"`,
+    `${speaker}: "${gate.heardAs}"`,
     reaction ? `You could not make sense of parts of it. ${REACTION_GUIDANCE[reaction]}` : '',
     trustNote,
   ].filter(Boolean).join(' ');
@@ -116,11 +120,13 @@ async function answerInCharacter(
   const blanked = checkAgainstWorld(message, era);
   const gate = { ...blanked, heardAs: renderAsHeard(blanked.heardAs, era) };
   const reaction = gate.inWorld ? null : chooseStrangeReaction(npc, dice);
+  const firstMeeting = !npc.relationships.some(tie => tie.playerId === player.id);
   let current = ensurePlayerTie(npc, player, at);
   const tieIndex = current.relationships.findIndex(tie => tie.playerId === player.id);
   const trust = current.relationships[tieIndex].affinity;
 
-  const rawReply = await chat(buildConversationPrompt(current, player, gate, reaction, trust, setting), dice.rollBetween(1, 1_000_000));
+  const prompt = buildConversationPrompt(current, player, gate, reaction, trust, setting, firstMeeting);
+  const rawReply = await chat(prompt, dice.rollBetween(1, 1_000_000));
   const tidied = tidyReply(rawReply, current.name);
   const replyWasReplaced = tidied === '' || mentionsOutsideWorld(tidied, era) || !checkConduct(tidied).allowed;
   const reply = replyWasReplaced ? SAFE_LINES[reaction ?? 'plain'] : tidied;
