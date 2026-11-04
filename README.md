@@ -4,6 +4,19 @@ ANPC creates non-player characters that live their own lives. Each one has a bac
 
 They keep living when the game isn't looking. Weeks of work, nights at the tavern, illness, quarrels and birthdays are lived out and written into a life log. So when an NPC steps into play, they arrive up to date with everything that happened to them.
 
+## Play it
+
+ANPC is a text game you play in the browser. Set up a world with its mode, scope, starting cast and roles, plus your own character, then launch it and play by typing: look around, ask where someone is, walk somewhere, talk, send for people, pay them, wait, and get a recap. Leave whenever you like, and the world keeps living. Your worlds are saved in your own browser.
+
+Ollama has to be running with llama3.1:8b. Then run these and open http://localhost:4200.
+
+```
+cd C:\projects\anpc
+npm start
+```
+
+GUIDE.md walks through how the app was built, one layer at a time.
+
 ## How it's built
 
 The engine in `src/engine` has no Angular in it, so any game can copy it in and use it. The Angular app around it is the workshop for creating, viewing and testing NPCs.
