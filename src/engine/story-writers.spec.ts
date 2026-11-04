@@ -12,6 +12,25 @@ function fakeOllama(failuresFirst: number) {
   return () => calls;
 }
 
+describe('writing characters with Ollama', () => {
+  const realFetch = globalThis.fetch;
+  afterEach(() => { globalThis.fetch = realFetch; });
+
+  it('asks again once when the model sends back broken JSON', async () => {
+    let calls = 0;
+    globalThis.fetch = (async () => {
+      calls += 1;
+      const content = calls === 1 ? '{"name": "Edwin",\n bad }' : '{"name": "Edwin"}';
+      return new Response(JSON.stringify({ message: { content } }), { status: 200 });
+    }) as typeof fetch;
+    const { createOllamaWriter } = await import('./story-writers');
+    const writer = createOllamaWriter({ model: 'llama3.1:8b', baseUrl: 'http://localhost:11434' });
+
+    expect(await writer([{ role: 'user', content: 'Write a miller' }], 1)).toEqual({ name: 'Edwin' });
+    expect(calls).toBe(2);
+  });
+});
+
 describe('talking to Ollama', () => {
   const realFetch = globalThis.fetch;
   afterEach(() => { globalThis.fetch = realFetch; });

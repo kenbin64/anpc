@@ -1,7 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import {
-  Npc, addDays, approachAndTalk, createDice, findWhereabouts, formatMoney, isPresentAt, logIn, logOut, payNpc,
-  recapSince, sendForNpc, summonRoleHolder,
+  Npc, addDays, approachAndTalk, createDice, findWhereabouts, formatMoney, isPresentAt, linkPromotion, logIn, logOut,
+  payNpc, recapSince, sendForNpc, summonRoleHolder,
 } from '../../engine';
 import { AiConnection } from '../ai/ai-connection';
 import { SavedWorld, TranscriptLine } from '../storage/saved-world';
@@ -153,8 +153,16 @@ export class GameSession {
     return people.length ? `You know of: ${people.join('; ')}.` : 'You know no one yet.';
   }
 
+  /**
+   * The recap is the world's news, not an echo of the player. Their own conversations, first meetings and
+   * small shifts in feeling are left out; what's left is what happened to the people of the place.
+   */
   private describeRecent(world: SavedWorld): string {
-    const recent = recapSince(world.scenario, addDays(world.scenario.lastGameDate, -30)).slice(-8);
+    const echoes = [/said: "/, /^Met a stranger/, /^A sensible talk/, /spoke strangely/, /^Learned the stranger's name/,
+      /entered into the world as extras/, /entered the world's records/, /^Weakened by/, /^Getting their strength/];
+    const recent = recapSince(world.scenario, addDays(world.scenario.lastGameDate, -30))
+      .filter(entry => !echoes.some(echo => echo.test(entry.summary)))
+      .slice(-8);
     return recent.length ? recent.map(entry => `${entry.at}: ${entry.name}: ${entry.summary}`).join('\n') : 'Nothing of note in the last month.';
   }
 
@@ -174,9 +182,21 @@ export class GameSession {
     return { world: moved, lines: [{ kind: 'narration', text: `You walk to ${known}.` }, { kind: 'narration', text: this.describeSurroundings(moved) }] };
   }
 
+  /**
+   * Waiting stops early when someone the player sent for arrives, so the player doesn't sleep through the
+   * meeting they asked for. A live playtest caught exactly that: the baker came at six and was gone by nine.
+   */
   private wait(world: SavedWorld, hours: number): { world: SavedWorld; lines: TranscriptLine[] } {
-    const waited = this.advanceHours(world, hours);
-    return { world: waited, lines: [{ kind: 'narration', text: `Time passes. ${this.describeSurroundings(waited)}` }] };
+    const place = (world.player.location ?? '').toLowerCase();
+    const arrivals = world.scenario.npcs
+      .filter(npc => npc.summonedTo && npc.summonedTo.place.toLowerCase() === place && npc.summonedTo.date === world.scenario.lastGameDate)
+      .filter(npc => npc.summonedTo!.fromHour > world.hour && npc.summonedTo!.fromHour <= world.hour + hours)
+      .sort((first, second) => first.summonedTo!.fromHour - second.summonedTo!.fromHour);
+    const firstArrival = arrivals[0];
+    const hoursWaited = firstArrival ? firstArrival.summonedTo!.fromHour - world.hour : hours;
+    const waited = this.advanceHours(world, hoursWaited);
+    const arrivalNote = firstArrival ? `${firstArrival.name} arrives, as they promised. ` : '';
+    return { world: waited, lines: [{ kind: 'narration', text: `Time passes. ${arrivalNote}${this.describeSurroundings(waited)}` }] };
   }
 
   /** Moves the clock on by whole hours. Past midnight, it's the next day, and the world's date moves too. */
@@ -199,7 +219,18 @@ export class GameSession {
       const date = current.scenario.lastGameDate;
       const dice = createDice(`${current.scenario.worldSeed}:${date}:${current.hour}:${current.transcript.length}`);
       const setting = `${current.scenario.settlement.name}, ${current.scenario.settlement.setting}`;
-      const result = await approachAndTalk(person, current.player, message, this.ai.chatModel(), dice, date, current.hour, setting);
+      // The real people of the place, plus the roles nobody fills yet. Unfilled roles are named by trade only,
+      // so an NPC can't invent a miller's name that the real miller would later contradict.
+      const neighbors = [
+        ...current.scenario.npcs
+          .filter(npc => npc.id !== person.id && npc.health.alive)
+          .map(npc => `${npc.name}${npc.occupation ? ` (the ${npc.occupation.title})` : ''}`),
+        ...current.scenario.settlement.roles
+          .filter(role => !role.heldBy)
+          .map(role => `the ${role.title} at ${role.workplace} (call them only "the ${role.title}", never by a name)`),
+      ];
+      const result = await approachAndTalk(person, current.player, message, this.ai.chatModel(), dice, date, current.hour,
+        setting, current.scenario.rules.era, neighbors);
       this.lastSpokenTo = person.name;
       if (result.notHere) {
         lines.push({ kind: 'narration', text: result.notHere });
@@ -223,13 +254,19 @@ export class GameSession {
     const atTheirPost = role !== undefined && (world.player.location ?? '').toLowerCase() === role.workplace.toLowerCase();
     let result: { world: SavedWorld; lines: TranscriptLine[] } = { world, lines: [] };
     if (role && atTheirPost) {
-      const summoned = await summonRoleHolder(world.scenario.settlement, role.title, this.ai.storyWriter(), world.scenario.lastGameDate,
-        world.scenario.worldSeed, world.scenario.npcs.map(npc => npc.name));
-      const scenario = {
-        ...world.scenario, settlement: summoned.settlement,
-        npcs: summoned.newNpc ? [...world.scenario.npcs, summoned.newNpc] : world.scenario.npcs,
-      };
-      result = { world: { ...world, scenario }, lines: [{ kind: 'narration', text: `You find the ${role.title}: ${summoned.newNpc?.name}.` }] };
+      const date = world.scenario.lastGameDate;
+      const summoned = await summonRoleHolder(world.scenario.settlement, role.title, this.ai.storyWriter(), date,
+        world.scenario.worldSeed, world.scenario.npcs.map(npc => npc.name), world.scenario.extras);
+      const holder = summoned.newNpc;
+      // If the role went to someone people already spoke of, they're no longer an extra, and everyone who
+      // knew them now points at the full person.
+      const npcs = holder
+        ? [...world.scenario.npcs.map(npc => (summoned.promotedExtraId ? linkPromotion(npc, holder, date) : npc)), holder]
+        : world.scenario.npcs;
+      const extras = world.scenario.extras.filter(extra => extra.id !== summoned.promotedExtraId);
+      const scenario = { ...world.scenario, settlement: summoned.settlement, npcs, extras };
+      const known = summoned.promotedExtraId ? ', the one you have heard spoken of' : '';
+      result = { world: { ...world, scenario }, lines: [{ kind: 'narration', text: `You find the ${role.title}: ${holder?.name}${known}.` }] };
     } else if (role) {
       result = { world, lines: [{ kind: 'narration', text: `There's surely a ${role.title} here, but you'd have to go to ${role.workplace} to find them.` }] };
     }

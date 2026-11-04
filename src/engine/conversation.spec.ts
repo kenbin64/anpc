@@ -60,15 +60,32 @@ describe('strange talk reactions', () => {
   });
 });
 
+describe('grounding', () => {
+  it('tells the NPC who really lives there, and not to invent anyone else', async () => {
+    const { chat, shown } = createRecordingChat('I know no Gundrik.');
+    await talkToNpc(buildTestNpc(), wanderer, 'Do you know a man called Gundrik?', chat, createDice('g'), '1200-02-01',
+      'a forge village', 'medieval', ['Vane Ashdown (the miller)', 'Godric Marston (the innkeeper)']);
+
+    const system = shown[0][0].content;
+    expect(system).toContain('Elsa (your spouse)');
+    expect(system).toContain('Vane Ashdown (the miller)');
+    expect(system).toContain('Never invent anyone else');
+  });
+});
+
 describe('first meetings', () => {
-  it('an NPC meeting the player for the first time hears a stranger, not a name', async () => {
-    const { chat, shown } = createRecordingChat('Good day, stranger.');
+  it('an NPC only learns the player name when the player says it', async () => {
+    const { chat, shown } = createRecordingChat('Good day.');
     const first = await talkToNpc(buildTestNpc(), wanderer, 'Good day', chat, createDice('t'), '1200-02-01', 'a forge village');
-    await talkToNpc(first.npc, wanderer, 'Good day again', chat, createDice('t'), '1200-02-02', 'a forge village');
+    const second = await talkToNpc(first.npc, wanderer, 'Good day again', chat, createDice('t'), '1200-02-02', 'a forge village');
+    const third = await talkToNpc(second.npc, wanderer, 'The name is Kestrel, by the way', chat, createDice('t'), '1200-02-03', 'a forge village');
+    await talkToNpc(third.npc, wanderer, 'Any work?', chat, createDice('t'), '1200-02-04', 'a forge village');
 
     expect(shown[0][1].content).toContain('A stranger you have never met before');
-    expect(shown[0][1].content).not.toContain('Kestrel');
-    expect(shown[1][1].content).toContain('Kestrel, a road-worn sellsword, whom you have spoken with before');
+    expect(shown[1][1].content).toContain('whose name you do not know');
+    expect(shown[1][1].content).not.toContain('Kestrel');
+    expect(shown[3][1].content).toContain('Kestrel, a road-worn sellsword, whom you have spoken with before');
+    expect(third.npc.lifeLog.some(event => event.summary === "Learned the stranger's name: Kestrel")).toBe(true);
   });
 });
 

@@ -48,8 +48,23 @@ export function createOllamaChat(options: OllamaOptions): ChatModel {
   return (messages, seed) => askOllama(options, { messages, options: { temperature: 0.8, seed } });
 }
 
-/** A writer that runs on a local Ollama model: private, free, and no data leaves the machine. */
+/**
+ * A writer that runs on a local Ollama model: private, free, and no data leaves the machine.
+ *
+ * Even when told the exact JSON shape, a small model now and then sends back JSON that won't parse. That
+ * isn't a crash, so it's handled like a stumble: ask once more with a fresh seed, and only then give up.
+ */
 export function createOllamaWriter(options: OllamaOptions): StoryWriter {
-  return async (messages, seed) =>
+  const writeOnce = async (messages: PromptMessage[], seed: number): Promise<unknown> =>
     JSON.parse((await askOllama(options, { messages, format: STORY_SCHEMA, options: { temperature: 0.8, seed } })) || '{}');
+  return async (messages, seed) => {
+    let story: unknown;
+    try {
+      story = await writeOnce(messages, seed);
+    } catch (problem) {
+      if (!(problem instanceof SyntaxError)) throw problem;
+      story = await writeOnce(messages, seed + 1);
+    }
+    return story;
+  };
 }

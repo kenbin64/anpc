@@ -40,6 +40,20 @@ describe('implied roles', () => {
     expect(again.holderId).toBe(first.holderId);
   });
 
+  it('gives the role to the person people already speak of, instead of inventing a second one', async () => {
+    const town = createSettlement('Ashford', 'town', 'a river valley');
+    const edwin = {
+      id: 'baker-x0', name: 'Edwin', species: 'human', description: "Godric's rival, the miller", classification: 'gentleman' as const,
+      knownBy: [{ npcId: 'baker', npcName: 'Godric', npcDescription: 'a baker', kind: 'rival' as const, notes: 'the miller who overcharges for flour' }],
+    };
+    const summoned = await summonRoleHolder(town, 'miller', writer, '1200-03-01', 'seed', [], [edwin]);
+
+    expect(summoned.promotedExtraId).toBe('baker-x0');
+    expect(summoned.newNpc?.name).toBe('Edwin');
+    expect(summoned.newNpc?.occupation?.title).toBe('miller');
+    expect(summoned.newNpc?.lifeLog[0].summary).toContain('the one Godric spoke of');
+  });
+
   it('says plainly when a place has no such role', async () => {
     const hamlet = createSettlement('Brindle', 'hamlet', 'the moors');
     await expect(summonRoleHolder(hamlet, 'mayor', writer, '1200-03-01')).rejects.toThrow('Brindle has no mayor');

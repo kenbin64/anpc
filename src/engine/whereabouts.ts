@@ -46,7 +46,7 @@ export function findWhereabouts(npc: Npc, date: string, hour: number): Whereabou
   const goesOutTonight = createDice(`${npc.id}:${date}:evening`).happens((npc.routine.tavernEveningsPerWeek / 7) * 100);
   const summoned = findSummons(npc, date, hour);
 
-  let whereabouts: Whereabouts = { place: homeOf(npc), activity: 'at home' };
+  let whereabouts: Whereabouts = { place: homeOf(npc), activity: 'going about their day' };
   if (!npc.health.alive) {
     whereabouts = { place: 'the graveyard', activity: `laid to rest; died of ${npc.health.death?.cause ?? 'unknown causes'}` };
   } else if (summoned) {

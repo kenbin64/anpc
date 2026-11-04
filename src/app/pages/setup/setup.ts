@@ -65,9 +65,11 @@ const STARTING_DRAFT: SetupDraft = {
  */
 function explainLaunchFailure(problem: Error): string {
   const notRunning = problem.message.includes('Failed to fetch') || problem.message.includes('NetworkError');
-  return notRunning
-    ? 'The local AI is not running. Start Ollama, then press Launch again. Your setup is still here.'
-    : `The local AI failed while writing the characters. Quit and restart Ollama, then press Launch again; your setup is still here. (Details: ${problem.message.slice(0, 160)})`;
+  const garbled = problem instanceof SyntaxError;
+  let message = `The local AI failed while writing the characters. Quit and restart Ollama, then press Launch again; your setup is still here. (Details: ${problem.message.slice(0, 160)})`;
+  if (notRunning) message = 'The local AI is not running. Start Ollama, then press Launch again. Your setup is still here.';
+  if (garbled) message = 'The local AI wrote a character it could not finish cleanly, twice. Press Launch again; your setup is still here.';
+  return message;
 }
 
 /** Roles ticked by default, so a new world opens with someone to talk to. */

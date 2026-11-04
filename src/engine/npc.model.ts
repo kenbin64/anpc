@@ -92,6 +92,8 @@ export interface Relationship {
   extraId?: string;
   /** Set when the tie is to a human player's character. */
   playerId?: string;
+  /** For a player: whether the NPC has learned their name. They only learn it when the player says it. */
+  knowsName?: boolean;
   notes?: string;
 }
 

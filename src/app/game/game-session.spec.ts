@@ -98,6 +98,26 @@ describe('GameSession', () => {
     expect(session.transcript().at(-1)?.kind).toBe('warning');
   });
 
+  it('waiting stops when someone the player sent for arrives', async () => {
+    const session = await buildSession();
+    await session.run('go to the chapel');
+    await session.run('send for Hobb');
+    const report = lastResponse(session);
+    await session.run('wait 12');
+    const arrivedAt = session.hour();
+    expect(report).toContain('Hobb Ashcroft');
+    expect(arrivedAt).toBeLessThan(23);
+    expect(lastResponse(session)).toContain('Hobb Ashcroft arrives, as they promised.');
+    expect(session.peopleHere().map(npc => npc.name)).toContain('Hobb Ashcroft');
+  });
+
+  it('the recap leaves out the player own talk', async () => {
+    const session = await buildSession();
+    await session.run('talk to Hobb: Hello');
+    await session.run('recap');
+    expect(lastResponse(session)).not.toContain('said:');
+  });
+
   it('says plainly when it does not understand', async () => {
     const session = await buildSession();
     await session.run('dance a jig');

@@ -38,7 +38,8 @@ export function checkAgainstWorld(message: string, era: EraName = 'medieval'): G
   const strangeWords: string[] = [];
   let heardAs = message;
   for (const term of [...META_TERMS, ...profile.outOfWorldTerms]) {
-    const termPattern = new RegExp(`\\b${escapeForRegex(term)}\\b`, 'gi');
+    // Plurals count too: "credit card" also catches "credit cards", "phone" catches "phones".
+    const termPattern = new RegExp(`\\b${escapeForRegex(term)}(?:s|es)?\\b`, 'gi');
     if (termPattern.test(heardAs)) {
       strangeWords.push(term);
       heardAs = heardAs.replace(termPattern, STRANGE_PLACEHOLDER);

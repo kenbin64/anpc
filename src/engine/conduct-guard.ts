@@ -51,6 +51,6 @@ function escapeForRegex(text: string): string {
 export function checkConduct(text: string): ConductResult {
   const order: ConductProblem[] = ['sexual-violence', 'sexual', 'cruelty'];
   const problem = order.find(category =>
-    BLOCKED_TERMS[category].some(term => new RegExp(`\\b${escapeForRegex(term)}\\b`, 'i').test(text))) ?? null;
+    BLOCKED_TERMS[category].some(term => new RegExp(`\\b${escapeForRegex(term)}(?:s|es)?\\b`, 'i').test(text))) ?? null;
   return { allowed: problem === null, problem };
 }

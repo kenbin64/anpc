@@ -26,14 +26,14 @@ export interface ApproachResult {
 /** Talks to the NPC only if they're where the player is; otherwise says where they are instead. */
 export async function approachAndTalk(
   npc: Npc, player: PlayerCharacter, message: string, chat: ChatModel, dice: Dice,
-  date: string, hour: number, setting: string, era: EraName = 'medieval',
+  date: string, hour: number, setting: string, era: EraName = 'medieval', neighbors: readonly string[] = [],
 ): Promise<ApproachResult> {
   const here = player.location !== undefined && isPresentAt(npc, player.location, date, hour);
   const whereabouts = findWhereabouts(npc, date, hour);
   const notHere = `${npc.name} isn't here. They're at ${whereabouts.place}, ${whereabouts.activity}. ` +
     'Travel there, or send someone to fetch them.';
   return here
-    ? { turn: await talkToNpc(npc, player, message, chat, dice, date, setting, era), notHere: null }
+    ? { turn: await talkToNpc(npc, player, message, chat, dice, date, setting, era, neighbors), notHere: null }
     : { turn: null, notHere };
 }
 
