@@ -1,3 +1,4 @@
+import { calculateWeeklyWage } from './economy';
 import { Npc } from './npc.model';
 import { generateNpc } from './npc-generator';
 import { StoryWriter } from './story-writers';
@@ -47,7 +48,7 @@ export interface Summoned {
 
 /** Brings a role's holder into the story: creates them the first time, returns the same person after. */
 export async function summonRoleHolder(
-  settlement: Settlement, title: string, writeStory: StoryWriter, at: string,
+  settlement: Settlement, title: string, writeStory: StoryWriter, at: string, worldSeed = '', avoidNames: string[] = [],
 ): Promise<Summoned> {
   const index = settlement.roles.findIndex(role => role.title === title);
   if (index < 0) {
@@ -62,12 +63,17 @@ export async function summonRoleHolder(
       classification: role.classification,
       setting: `${settlement.name}, a ${settlement.size} in ${settlement.setting}`,
       hints: `This person is the ${title} of ${settlement.name} and works at ${role.workplace}. Their story must fit that office.`,
-      seed: id,
+      seed: `${worldSeed}:${id}`,
+      avoidNames,
     }, writeStory, at);
+    const experience = generated.occupation?.experience ?? 50;
     const holder: Npc = {
       ...generated,
       id,
-      occupation: { ...(generated.occupation ?? { experience: 50, workEthic: 60 }), title, workplace: role.workplace, role: role.role },
+      occupation: {
+        title, workplace: role.workplace, role: role.role, experience,
+        workEthic: generated.occupation?.workEthic ?? 60, weeklyWage: calculateWeeklyWage(role.role, experience),
+      },
       lifeLog: [{
         at, kind: 'created',
         summary: `${generated.name} stepped into the story as the ${title} of ${settlement.name}. The office always existed; until now no one had needed them.`,

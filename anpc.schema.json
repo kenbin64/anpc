@@ -275,6 +275,10 @@
         "id": {
           "type": "string"
         },
+        "lifeExpectancy": {
+          "description": "The age they can expect to reach, rolled from their species. Old age takes them around it (see lifespan.ts).",
+          "type": "number"
+        },
         "lifeLog": {
           "description": "Everything that ever happened to them or changed about them, oldest first.",
           "items": {
@@ -302,6 +306,10 @@
             }
           ]
         },
+        "purse": {
+          "description": "Money on hand, in the smallest coin. Below zero means they're in debt.",
+          "type": "number"
+        },
         "relationships": {
           "items": {
             "$ref": "#/definitions/Relationship"
@@ -323,6 +331,10 @@
         "stats": {
           "$ref": "#/definitions/CoreStats"
         },
+        "summonedTo": {
+          "$ref": "#/definitions/Summons",
+          "description": "A summons they agreed to: where to be, for whom, on what date and between which hours."
+        },
         "temperament": {
           "$ref": "#/definitions/Temperament"
         }
@@ -333,11 +345,13 @@
         "name",
         "species",
         "age",
+        "lifeExpectancy",
         "classification",
         "maritalStatus",
         "backstory",
         "stats",
         "health",
+        "purse",
         "temperament",
         "social",
         "occupation",
@@ -364,6 +378,10 @@
         "title": {
           "type": "string"
         },
+        "weeklyWage": {
+          "description": "What a full week's work brings in, in the smallest coin (see economy.ts). Owners' takings vary week to week.",
+          "type": "number"
+        },
         "workEthic": {
           "$ref": "#/definitions/Scale",
           "description": "lazy (0) to hard worker (100)."
@@ -377,7 +395,8 @@
         "workplace",
         "role",
         "experience",
-        "workEthic"
+        "workEthic",
+        "weeklyWage"
       ],
       "type": "object"
     },
@@ -513,6 +532,35 @@
       "required": [
         "name",
         "description"
+      ],
+      "type": "object"
+    },
+    "Summons": {
+      "additionalProperties": false,
+      "description": "An agreement to come to a place, made when someone sends for an NPC.",
+      "properties": {
+        "by": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "fromHour": {
+          "type": "number"
+        },
+        "place": {
+          "type": "string"
+        },
+        "untilHour": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "place",
+        "by",
+        "date",
+        "fromHour",
+        "untilHour"
       ],
       "type": "object"
     },

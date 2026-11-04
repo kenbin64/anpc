@@ -10,7 +10,8 @@ import { Dice } from './random';
  * a full ANPC only if the story brings them into a scene, the same as any other extra.
  *
  * Chances are weekly and modest: only married NPCs aged 18 to 45, less likely with each child already in
- * the family. When both parents are full NPCs, the couple is counted once and the child is tied to both.
+ * the family, and never within about fifteen months of the last child. When both parents are full NPCs,
+ * the couple is counted once and the child is tied to both.
  */
 
 const CHILD_NAMES = [
@@ -20,6 +21,15 @@ const CHILD_NAMES = [
 
 /** The weekly chance of a birth, in percent: about one child every two years for a young couple. */
 const WEEKLY_BIRTH_CHANCE = 1;
+
+/** The least time between one child and the next, in days: about fifteen months. */
+const DAYS_BETWEEN_CHILDREN = 456;
+
+/** True if this parent had a child too recently for another. */
+function hadChildRecently(npc: Npc, at: string): boolean {
+  const lastBirth = [...npc.lifeLog].reverse().find(event => event.kind === 'family' && event.summary.startsWith('A child,'));
+  return lastBirth !== undefined && (Date.parse(at) - Date.parse(lastBirth.at)) / 86_400_000 < DAYS_BETWEEN_CHILDREN;
+}
 
 function isOfAge(npc: Npc): boolean {
   return npc.health.alive && npc.maritalStatus === 'married' && npc.age >= 18 && npc.age <= 45 && npc.creature === null;
@@ -56,13 +66,14 @@ export function welcomeBirths(people: readonly Npc[], dice: Dice, at: string): {
     const spouseIndex = spouseTie?.npcId ? people.findIndex(person => person.id === spouseTie.npcId) : -1;
     const countedByPartner = spouseIndex >= 0 && spouseIndex < index;
     const chance = WEEKLY_BIRTH_CHANCE / (1 + countChildren(parent));
-    if (isOfAge(parent) && spouseTie && !countedByPartner && dice.happens(chance)) {
+    if (isOfAge(parent) && spouseTie && !countedByPartner && !hadChildRecently(parent, at) && dice.happens(chance)) {
       const child: Extra = {
         id: `${parent.id}-born-${at}`,
         name: `${dice.pick(CHILD_NAMES)}${familyName(parent)}`,
         species: parent.species,
-        description: `the infant child of ${parent.name} and ${spouseTie.name}, born ${at}`,
+        description: `the child of ${parent.name} and ${spouseTie.name}, born ${at}`,
         classification: parent.classification,
+        bornOn: at,
         knownBy: [parent, ...(spouseIndex >= 0 ? [people[spouseIndex]] : [])].map(knower => ({
           npcId: knower.id, npcName: knower.name, kind: 'child' as const,
           npcDescription: `a ${knower.age}-year-old ${knower.species} ${knower.classification}`,

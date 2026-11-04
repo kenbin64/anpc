@@ -25,7 +25,8 @@ describe('care for the sick', () => {
 
     expect(worker.health.caredForBy).toBe('Tobin');
     expect(worker.relationships[0].affinity).toBe(60);
-    expect(miller.lifeLog.at(-2)?.summary).toBe("Paid for Wat's treatment for winter fever.");
+    expect(miller.lifeLog.at(-2)?.summary).toBe("Paid 4 silver for Wat's treatment for winter fever.");
+    expect(miller.purse).toBe(200 - 40);
     expect(miller.social.reputation).toBe(52);
   });
 

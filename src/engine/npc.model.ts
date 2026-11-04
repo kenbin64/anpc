@@ -75,6 +75,8 @@ export interface Occupation {
   experience: Scale;
   /** lazy (0) to hard worker (100). */
   workEthic: Scale;
+  /** What a full week's work brings in, in the smallest coin (see economy.ts). Owners' takings vary week to week. */
+  weeklyWage: number;
 }
 
 /**
@@ -104,6 +106,24 @@ export interface PlayerCharacter {
   name: string;
   /** How they appear in the world, such as "a road-worn sellsword with a scarred jaw". */
   description: string;
+  /** Where they are right now. Players can only talk to NPCs who are in the same place. */
+  location?: string;
+  /** Money on hand, in the smallest coin. A rich player starts with plenty; a working player has to earn it. */
+  purse?: number;
+  /** Their place in society, which sets their living costs. Commoner if not given. */
+  societyRank?: SocietyRank;
+  /** Player characters age too, and no one lives forever. */
+  age?: number;
+  lifeExpectancy?: number;
+}
+
+/** An agreement to come to a place, made when someone sends for an NPC. */
+export interface Summons {
+  place: string;
+  by: string;
+  date: string;
+  fromHour: number;
+  untilHour: number;
 }
 
 /**
@@ -122,6 +142,8 @@ export interface Extra {
   description: string;
   /** The classification they'll get if promoted. */
   classification: Classification;
+  /** The game date they were born, when known, so they're the right age if they're ever promoted. */
+  bornOn?: string;
   /**
    * Full NPCs who know them, and how. `npcDescription` says who that NPC is ("a blacksmith at the village
    * forge"), so a promoted extra's story can't contradict the people already in the world.
@@ -216,11 +238,15 @@ export interface Npc {
   name: string;
   species: string;
   age: number;
+  /** The age they can expect to reach, rolled from their species. Old age takes them around it (see lifespan.ts). */
+  lifeExpectancy: number;
   classification: Classification;
   maritalStatus: MaritalStatus;
   backstory: string;
   stats: CoreStats;
   health: Health;
+  /** Money on hand, in the smallest coin. Below zero means they're in debt. */
+  purse: number;
   temperament: Temperament;
   social: SocialStanding;
   occupation: Occupation | null;
@@ -231,6 +257,8 @@ export interface Npc {
   routine: Routine;
   /** The game date the NPC's life has been lived up to. */
   livedUntil: string;
+  /** A summons they agreed to: where to be, for whom, on what date and between which hours. */
+  summonedTo?: Summons;
   /** Everything that ever happened to them or changed about them, oldest first. */
   lifeLog: LifeEvent[];
 }

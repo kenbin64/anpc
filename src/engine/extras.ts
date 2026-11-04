@@ -1,6 +1,7 @@
 import { changeField, changeFieldInto, recordEvent } from './life-log';
 import { Classification, Extra, FieldChange, Npc, RelationKind } from './npc.model';
 import { generateNpc } from './npc-generator';
+import { ageForward } from './lifespan';
 import { Dice } from './random';
 import { StoryWriter } from './story-writers';
 
@@ -100,11 +101,15 @@ export async function promoteExtra(extra: Extra, writeStory: StoryWriter, settin
     name: link.npcName, kind: RECIPROCAL[link.kind], npcId: link.npcId,
     affinity: link.kind === 'enemy' || link.kind === 'rival' ? 25 : 70, notes: link.notes,
   }));
+  const gameYearsSinceBirth = extra.bornOn ? Math.floor((Date.parse(at) - Date.parse(extra.bornOn)) / 31_557_600_000) : null;
+  const age = gameYearsSinceBirth === null ? generated.age : ageForward(0, gameYearsSinceBirth);
   const promoted: Npc = {
     ...generated,
     id: extra.id,
     name: extra.name,
     species: extra.species,
+    age,
+    lifeExpectancy: Math.max(generated.lifeExpectancy, age + 10),
     relationships: [...tiesBack, ...generated.relationships.filter(tie => !knownNames.has(tie.name))],
     lifeLog: [{ at, kind: 'created', summary: `${extra.name} stepped into the story. Until now they were known only as ${extra.description}.` }],
   };

@@ -25,6 +25,7 @@ export const STORY_SCHEMA = {
     age: { type: 'integer' },
     maritalStatus: { type: 'string', enum: MARITAL },
     backstory: { type: 'string' },
+    inDebt: { type: 'boolean' },
     occupation: {
       type: ['object', 'null'],
       properties: { title: { type: 'string' }, workplace: { type: 'string' }, role: { type: 'string', enum: ROLES } },
@@ -69,7 +70,7 @@ export const STORY_SCHEMA = {
       },
     },
   },
-  required: ['name', 'species', 'age', 'maritalStatus', 'backstory', 'occupation', 'relationships', 'affiliations', 'abilities', 'routine', 'creature'],
+  required: ['name', 'species', 'age', 'maritalStatus', 'backstory', 'inDebt', 'occupation', 'relationships', 'affiliations', 'abilities', 'routine', 'creature'],
 } as const;
 
 export interface Story {
@@ -78,6 +79,8 @@ export interface Story {
   age: number;
   maritalStatus: MaritalStatus;
   backstory: string;
+  /** True when the story says they owe money. Code then starts their purse in the red, so story and numbers agree. */
+  inDebt: boolean;
   occupation: { title: string; workplace: string; role: WorkRole } | null;
   relationships: { name: string; kind: RelationKind; affinity: number; notes?: string }[];
   affiliations: { name: string; kind: AffiliationKind }[];
@@ -120,6 +123,7 @@ export function shapeStory(raw: unknown, isCreature: boolean): Story {
     age: clamp(source['age'], 1, 500, 30),
     maritalStatus: oneOf(source['maritalStatus'], MARITAL, 'single'),
     backstory: text(source['backstory'], 'Their past is unknown.'),
+    inDebt: source['inDebt'] === true && !isCreature,
     occupation: job && !isCreature
       ? { title: text(job['title'], 'laborer'), workplace: text(job['workplace'], 'the village'), role: oneOf(job['role'], ROLES, 'worker') }
       : null,

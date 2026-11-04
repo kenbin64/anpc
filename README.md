@@ -58,6 +58,54 @@ Here is how that plays out. A miller's worker falls ill; nobody scripted it, it 
 
 The log keeps what matters in play, not every moment. Fights, illness, recoveries, choices, conversations and deaths get their own entries. Ordinary living is rolled into one summary per stretch, listing the net change to every number that moved and why.
 
+## How players are heard
+
+Players speak plain modern English, typed or spoken. ANPCs hear it in the speech of their own world and answer in their own accent. A medieval dwarf blacksmith never hears "Hey dude, what's up?" He hears "Hail friend, how fares it?" and answers "Ah, good day to ye, sellsword!" That line is from a live test.
+
+The NPC never hears the player's real voice or way of writing, only what they meant. Spoken words become text first, so even a voice player's real voice never reaches the world. Common modern phrases are swapped in plain code from the era's phrasebook, and the AI is told the stranger's words reach the NPC in their own tongue, which covers whatever the phrasebook misses. Words that also have an everyday old meaning, like "cool water" or "the great hall," are left alone. The life log records what the NPC heard, not what the player typed.
+
+## Money
+
+Every NPC carries a purse, and every job pays a weekly wage set by its role and the worker's experience. An owner's takings rise and fall week to week. Each week an NPC earns for the days they actually worked, then pays living costs that depend on their social rank, plus their nights at the tavern. A noble lives far more dearly than a peasant. Running short means debt, and falling into debt or paying it off each gets its own entry in the log.
+
+The gentry, nobles and royals also have income that comes with rank rather than work, such as rents and estates, which is what pays for their dearer way of life. A balance check in the tests lives ten villagers of each rank through a year to make sure most of them stay afloat.
+
+Money moves between people instead of appearing from nowhere. An employer who is a full NPC pays their workers out of their own purse each week. Paying for a sick worker's treatment costs real coin, so a kind miller with an empty purse can want to help and still not be able to. When a backstory says a character owes money, their purse starts in the red, so the story and the numbers agree.
+
+Players have purses too. A rich player can pay NPCs for goods, work or favors. A working player gets paid by NPCs for work and has living costs of their own, based on the rank they play. Nobody can pay what they don't have.
+
+Money is kept as whole coins of the smallest kind, copper in a medieval world and cents in a modern one, and shown the way people of the era would say it, such as "2 gold, 3 silver, 5 copper."
+
+## Meeting, time and death
+
+A player can always ask where an ANPC is and what they're doing. The answer comes from the NPC's own life: asleep at night, at work on work days, at worship on their day, at the tavern on their evenings out, in bed when sick, in the graveyard when dead.
+
+To talk with them, the player has to be in the same place. There's no teleporting. The player either travels to them or sends someone to fetch them, and fetching is a request the NPC answers for themselves. The dead can't come, the sick are too ill, a hard worker finishes their shift first, and someone who dislikes the sender won't come at all.
+
+Time only moves forward. Once a world has started, looking back is a recap of what happened, never a return to it. If the real clock is ever set back, the world waits where it was instead of rewinding.
+
+Every world is different. Each one gets its own dice when it starts, so the same plan run twice gives two different worlds.
+
+If a player's character is killed, that character's story is over. The human can step back into the same world as a new character. To the world, the new character is a stranger, because the human behind both is outside the world. The NPCs who knew the dead character remember the death.
+
+For now ANPC is single-player. A multiplayer version over sockets is planned for later. The likely shape is that one player's machine hosts the world while the server only passes messages between players, so the server still holds nothing.
+
+## Coming and going
+
+A game never ends; it only pauses. When a player logs out, their character steps out of the world and is safe, while everyone else keeps living. When they log back in, the world is caught up to now, not to where they left off, and they get a welcome-back report. It says how much game time passed, then lists the important things that happened while they were gone, anything involving them first, shown in date order. Routine and repeated entries are left out.
+
+A player character can only die during actual play. The engine refuses to kill a character whose player is logged out, so nobody comes back to find they died while away. When a character dies in play, the player can come back to the same world as a new character, a stranger to everyone.
+
+A player can also retire their character. The character becomes an ANPC who settles down and keeps living in the world, with a backstory written from what the world remembers about them. Everyone who knew them keeps knowing them, now as a full ANPC, and the player starts fresh with someone new.
+
+## Age and lifespan
+
+Everyone ages, and no one lives forever, player characters included. Each character gets a life expectancy from their species, so a dwarf or an elf far outlives a human. Children grow up three years for every game year until they come of age at sixteen, so a child born in play is an adult in a few game years. Adults age a year at a time. Old age becomes a rising chance of death starting ten years before the expected age, and fifteen years past it, death within the year is all but certain. Player characters age between visits, get a warning when they're growing frail, and can die of old age only during play.
+
+## The rules are set at launch
+
+Once a world is launched, its rules are fixed: the mode, the objective, the era, the scope and how fast time runs. They're frozen in code, so nothing can quietly change them afterward. People still come and go, but only through play: births, extras who are promoted, role holders who are summoned, retired player characters, and new players arriving.
+
 ## Who is in the world, from heaviest to lightest
 
 Full NPCs live simulated lives and keep a life log. Extras are people someone knows by name, such as a blacksmith's wife or a tavern regular, and they cost almost nothing until promoted. Implied roles are lighter still: every town has a mayor and a constable, but until the story needs one, the role is only a line in the town's list, with no person behind it yet. The first time anyone deals with the constable, a full NPC is made to fit the office, and the same person holds it from then on.
@@ -98,11 +146,17 @@ Word lists can't catch every real-world phrase, which is why the AI's own rules 
 | `scenario.ts` | The starting cast that opens a scenario, and catching it up when the app starts |
 | `world-clock.ts` | Real time to game time, at the speed the game maker chooses |
 | `together.ts` | NPCs living each week side by side, starting with care for the sick |
+| `economy.ts` | Wages, rank income, living costs, debt, and paying each other |
+| `sessions.ts` | Logging in and out, welcome-back news, death only in play, retirement |
+| `lifespan.ts` | Life expectancy by species, children growing up faster, old age |
+| `whereabouts.ts` | Where an ANPC is and what they're doing at any hour |
+| `meeting.ts` | Meeting in person, sending for someone, and a player character's death |
 | `births.ts` | Children born to married couples, recorded plainly, arriving as extras |
 | `courtship.ts` | Earning affection over time; every ANPC can accept or turn a suitor away |
 | `marriage.ts` | Proposals and marriages, as a shared home and life |
 | `conduct-guard.ts` | What is never allowed, checked on players' words and on everything the AI writes |
 | `world-gate.ts` | Finds and blanks out anything a human player says from outside the world |
+| `speech.ts` | How a player's modern English is heard in the NPC's own world |
 | `strange-talk.ts` | How an NPC reacts to strange talk, by its nature |
 | `conversation.ts` | A player talking to an NPC, through all three layers |
 | `index.ts` | The front door: one import for a game |
@@ -136,3 +190,6 @@ Ken directs each screen and Claude builds it. Each one practices a different par
 | 7 | Family and relationship view | Child components, recursion |
 | 8 | Save, export and import JSON | Files in the browser, the format checks |
 | 9 | The village: several NPCs who know each other, lived forward together | Routing, a shared store, the big test |
+| 10 | Talk instead of type: the player speaks, and their words become text | Browser audio, a local speech model |
+
+Voice will run on a speech model inside the player's own browser, so what they say never leaves their machine. The transcript is just text, so it passes through the same conduct guard and world gate as anything typed.

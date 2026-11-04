@@ -5,7 +5,8 @@ import { NpcRequest } from './story-prompt';
 import { Settlement, summonRoleHolder } from './settlement';
 import { StoryWriter } from './story-writers';
 import { WorldClock, catchUpEveryone, readGameDate } from './world-clock';
-import { WorldMode } from './world-setup';
+import { EraName, WorldMode, WorldScope } from './world-setup';
+import type { PlayerSession } from './sessions';
 
 /**
  * A SCENARIO: the starting cast that gets the ball rolling.
@@ -32,47 +33,89 @@ export interface ScenarioPlan {
   startingRoles: string[];
   /** How fast the world runs: game days per real day. Defaults to 7, one game week per real day. */
   gameDaysPerRealDay?: number;
+  /** Only to replay a world exactly, such as in tests. Left out, every world gets its own fresh dice. */
+  worldSeed?: string;
+}
+
+/**
+ * THE RULES, set once at launch and never changed after. Both the record and the clock are frozen when
+ * the world starts, so no later code can quietly change how the world works. People still come and go,
+ * but only through play: births, promotions, a summons, retirement, a new player character.
+ */
+export interface WorldRules {
+  mode: WorldMode;
+  objective: string;
+  era: EraName;
+  scope: WorldScope;
+  gameDaysPerRealDay: number;
 }
 
 export interface Scenario {
   settlement: Settlement;
-  mode: WorldMode;
-  objective: string;
+  rules: Readonly<WorldRules>;
   npcs: Npc[];
   extras: Extra[];
-  clock: WorldClock;
+  clock: Readonly<WorldClock>;
+  /** Made fresh for every new world, so no two worlds roll the same dice, even with the same town name. */
+  worldSeed: string;
+  /** The furthest game date this world has reached. Time never goes back past it. */
+  lastGameDate: string;
+  /** Every player who has played in this world, and whether they're playing right now (see sessions.ts). */
+  sessions: PlayerSession[];
 }
 
-/** Call whenever the app starts: works out today's game date and lives every NPC up to it. */
+/**
+ * Call whenever the app starts: works out today's game date and lives every NPC up to it. Time only moves
+ * forward. If the real clock reads earlier than before (a changed computer clock, say), the world simply
+ * waits where it was; it never rewinds.
+ */
 export function catchUpScenario(scenario: Scenario, realNow: Date): Scenario {
-  const gameDate = readGameDate(scenario.clock, realNow);
-  const lived = catchUpEveryone(scenario.npcs, gameDate, scenario.settlement.name);
-  return { ...scenario, npcs: lived.npcs, extras: [...scenario.extras, ...lived.newExtras] };
+  const clockDate = readGameDate(scenario.clock, realNow);
+  const gameDate = clockDate > scenario.lastGameDate ? clockDate : scenario.lastGameDate;
+  const lived = catchUpEveryone(scenario.npcs, gameDate, scenario.worldSeed);
+  return { ...scenario, npcs: lived.npcs, extras: [...scenario.extras, ...lived.newExtras], lastGameDate: gameDate };
+}
+
+/** What has happened since a date, across the whole cast, oldest first. Looking back is a recap only. */
+export function recapSince(scenario: Scenario, since: string): { name: string; at: string; summary: string }[] {
+  return scenario.npcs
+    .flatMap(npc => npc.lifeLog.filter(event => event.at > since).map(event => ({ name: npc.name, at: event.at, summary: event.summary })))
+    .sort((first, second) => first.at.localeCompare(second.at));
 }
 
 export async function startScenario(
   plan: ScenarioPlan, writeStory: StoryWriter, at: string, realNow: Date = new Date(),
 ): Promise<Scenario> {
   const setting = `${plan.settlement.name}, a ${plan.settlement.size} in ${plan.settlement.setting}`;
+  const worldSeed = plan.worldSeed ?? crypto.randomUUID();
   let settlement = plan.settlement;
   const cast: Npc[] = [];
 
+  const takenNames = (): string[] => cast.map(npc => npc.name);
   for (const request of plan.startingCast) {
-    cast.push(await generateNpc({ ...request, setting, era: plan.settlement.era }, writeStory, at));
+    cast.push(await generateNpc({
+      ...request, seed: `${worldSeed}:${request.seed}`, setting, era: plan.settlement.era, avoidNames: takenNames(),
+    }, writeStory, at));
   }
   for (const title of plan.startingRoles) {
-    const summoned = await summonRoleHolder(settlement, title, writeStory, at);
+    const summoned = await summonRoleHolder(settlement, title, writeStory, at, worldSeed, takenNames());
     settlement = summoned.settlement;
     if (summoned.newNpc) cast.push(summoned.newNpc);
   }
 
   const registered = cast.map(npc => registerExtras(npc, at));
+  const gameDaysPerRealDay = plan.gameDaysPerRealDay ?? 7;
   return {
     settlement,
-    mode: plan.mode ?? 'simulation',
-    objective: plan.objective ?? '',
+    rules: Object.freeze({
+      mode: plan.mode ?? 'simulation', objective: plan.objective ?? '',
+      era: settlement.era, scope: settlement.size, gameDaysPerRealDay,
+    }),
     npcs: registered.map(entry => entry.npc),
     extras: registered.flatMap(entry => entry.extras),
-    clock: { realStart: realNow.toISOString(), gameStart: at, gameDaysPerRealDay: plan.gameDaysPerRealDay ?? 7 },
+    clock: Object.freeze({ realStart: realNow.toISOString(), gameStart: at, gameDaysPerRealDay }),
+    worldSeed,
+    lastGameDate: at,
+    sessions: [],
   };
 }

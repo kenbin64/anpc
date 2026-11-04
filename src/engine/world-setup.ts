@@ -38,6 +38,11 @@ export interface EraProfile {
   outOfWorldPatterns: RegExp[];
   /** The roles each scope adds, in this era. */
   rolesByScope: Record<WorldScope, RoleTemplate[]>;
+  /**
+   * Modern phrases and how they reach an NPC's ears in this era. Players speak plain modern English;
+   * NPCs hear the meaning in the speech of their own world. Matched as whole words, longest first.
+   */
+  phrasebook: [modern: string, heardAs: string][];
 }
 
 const role = (title: string, workplace: string, workRole: WorkRole, classification: Classification = 'gentleman'): RoleTemplate =>
@@ -84,6 +89,17 @@ export const ERA_PROFILES: Record<EraName, EraProfile> = {
         role('master of coin', 'the treasury', 'professional', 'noble'),
       ],
     },
+    phrasebook: [
+      ["what's up", 'how fares it'], ["how's it going", 'how fares it'], ['hang out', 'keep company'],
+      ['no problem', 'it is no trouble'], ['okay cool', 'very well'], ['ok cool', 'very well'], ["that's cool", 'that is fine'],
+      ['sounds cool', 'sounds fine'], ['so cool', 'a fine thing'], ['cool beans', 'very well'], ['thank you', 'my thanks'], ['thanks', 'my thanks'], ['you guys', 'all of you'],
+      ['hey', 'hail'], ['hi', 'good day'], ['hello', 'good day'], ['bye', 'farewell'], ['okay', 'very well'], ['ok', 'very well'],
+      ['yeah', 'aye'], ['yep', 'aye'], ['yup', 'aye'], ['nope', 'nay'], ['guys', 'friends'], ['dude', 'friend'], ['bro', 'friend'],
+      ['buddy', 'friend'], ['awesome', 'fine'], ['gonna', 'going to'],
+      ['wanna', 'want to'], ['gotta', 'must'], ['kinda', 'somewhat'], ['lol', ''], ['lmao', ''], ['omg', 'by the gods'],
+      ['folks', 'good people'], ['kids', 'children'], ['cops', 'the watch'], ['police', 'the watch'],
+      // Words with an everyday old meaning too ("cool water", "the great hall", "money") are left alone on purpose.
+    ],
   },
   modern: {
     styleGuide: 'Natural, present-day American speech and life. No references to games, AI or being a character.',
@@ -111,6 +127,7 @@ export const ERA_PROFILES: Record<EraName, EraProfile> = {
       ],
       kingdom: [role('governor', 'the state capitol', 'boss'), role('senator', 'the capitol', 'professional')],
     },
+    phrasebook: [],
   },
 };
 

@@ -25,9 +25,22 @@ export { createOllamaWriter, createOllamaChat, type StoryWriter, type ChatModel,
 export { checkAgainstWorld, mentionsOutsideWorld, type GateResult } from './world-gate';
 export { chooseStrangeReaction, type StrangeReaction } from './strange-talk';
 export { talkToNpc, type ConversationTurn } from './conversation';
+export { renderAsHeard } from './speech';
+export {
+  formatMoney, payNpc, payPlayer, chargePlayerLiving, calculateWeeklyWage,
+  WEEKLY_LIVING_COST, TAVERN_EVENING_COST, TREATMENT_COST, type PaymentResult,
+} from './economy';
 export { checkConduct, CONDUCT_WARNING, type ConductResult, type ConductProblem } from './conduct-guard';
 export { createSettlement, summonRoleHolder, type Settlement, type RoleSlot, type SettlementSize, type Summoned } from './settlement';
-export { startScenario, catchUpScenario, type Scenario, type ScenarioPlan } from './scenario';
+export { startScenario, catchUpScenario, recapSince, type Scenario, type ScenarioPlan } from './scenario';
+export { findWhereabouts, isPresentAt, type Whereabouts } from './whereabouts';
+export { approachAndTalk, sendForNpc, type ApproachResult, type FetchResult } from './meeting';
+export {
+  logIn, logOut, isPlaying, killPlayerCharacter, checkPlayerOldAge, retireCharacter, type PlayerSession, type WelcomeBack,
+} from './sessions';
+export {
+  ADULT_AGE, CHILD_YEARS_PER_YEAR, ageForward, rollLifeExpectancy, oldAgeDeathChance, isFrail,
+} from './lifespan';
 export { readGameDate, catchUpEveryone, type WorldClock } from './world-clock';
 export {
   ERA_PROFILES, META_TERMS, SCOPE_ORDER, listImpliedRoles,

@@ -1,4 +1,6 @@
+import { TAVERN_EVENING_COST, WEEKLY_LIVING_COST, WEEKLY_RANK_INCOME, formatMoney, rollOwnerTakings } from './economy';
 import { addDays, readYear } from './game-date';
+import { ADULT_AGE, oldAgeDeathChance, yearsGainedInAYear } from './lifespan';
 import { calculateEffectiveStats, calculateEffectiveWorkEthic, recordDeath } from './health';
 import { changeField, changeFieldInto, recordEvent, shiftDial } from './life-log';
 import { decide } from './nature';
@@ -46,13 +48,15 @@ export interface Ledger {
   familyEvenings: number;
   timesWorshipped: number;
   quarrelsSettledCalmly: number;
+  moneyEarned: number;
+  moneySpent: number;
   quietChanges: FieldChange[];
 }
 
 function startLedger(): Ledger {
   return {
     weeks: 0, daysWorked: 0, workDaysPossible: 0, tavernEvenings: 0, familyEvenings: 0,
-    timesWorshipped: 0, quarrelsSettledCalmly: 0, quietChanges: [],
+    timesWorshipped: 0, quarrelsSettledCalmly: 0, moneyEarned: 0, moneySpent: 0, quietChanges: [],
   };
 }
 
@@ -67,11 +71,36 @@ function driftQuietly(npc: Npc, ledger: Ledger, field: string, amount: number, r
 function liveOneWeek(npc: Npc, weekStart: string, ledger: Ledger, dice: Dice): Npc {
   let current = npc;
   ledger.weeks += 1;
+  const daysWorkedBefore = ledger.daysWorked;
   current = ageOnNewYear(current, ledger, weekStart);
   current = workTheWeek(current, ledger, dice);
   current = spendEvenings(current, ledger, weekStart, dice);
   current = attendWorship(current, ledger, dice);
   current = changeHealth(current, ledger, weekStart, dice);
+  current = settleTheWeek(current, ledger.daysWorked - daysWorkedBefore, ledger, weekStart, dice);
+  return current;
+}
+
+/**
+ * The week's money: pay for the days worked (an owner's takings vary), minus living costs for their rank
+ * and their tavern evenings. Falling into debt, or climbing out of it, matters in play and is logged.
+ */
+function settleTheWeek(npc: Npc, daysWorked: number, ledger: Ledger, weekStart: string, dice: Dice): Npc {
+  const job = npc.occupation;
+  const workDays = npc.routine.workDaysPerWeek;
+  const fullPay = job ? (job.role === 'owner' ? rollOwnerTakings(job.weeklyWage, dice) : job.weeklyWage) : 0;
+  const wages = workDays > 0 ? Math.round((fullPay * daysWorked) / workDays) : 0;
+  const earned = wages + (npc.creature ? 0 : WEEKLY_RANK_INCOME[npc.social.societyRank]);
+  const spent = (npc.creature ? 0 : WEEKLY_LIVING_COST[npc.social.societyRank]) + npc.routine.tavernEveningsPerWeek * TAVERN_EVENING_COST;
+  const settled = changeFieldInto(npc, 'purse', npc.purse + earned - spent, 'Wages earned, less living costs');
+  ledger.quietChanges.push(settled.change);
+  ledger.moneyEarned += earned;
+  ledger.moneySpent += spent;
+  const fellIntoDebt = npc.purse >= 0 && settled.npc.purse < 0;
+  const paidOffDebt = npc.purse < 0 && settled.npc.purse >= 0;
+  let current = settled.npc;
+  if (fellIntoDebt) current = recordEvent(current, { at: weekStart, kind: 'work', summary: `${npc.name} fell into debt.` });
+  if (paidOffDebt) current = recordEvent(current, { at: weekStart, kind: 'work', summary: `${npc.name} paid off their debts.` });
   return current;
 }
 
@@ -79,7 +108,7 @@ function ageOnNewYear(npc: Npc, ledger: Ledger, weekStart: string): Npc {
   const crossedNewYear = readYear(addDays(weekStart, 7)) > readYear(weekStart);
   let current = npc;
   if (crossedNewYear) {
-    const aged = changeFieldInto(npc, 'age', npc.age + 1, 'A year older');
+    const aged = changeFieldInto(npc, 'age', npc.age + yearsGainedInAYear(npc.age), npc.age < ADULT_AGE ? 'Growing up' : 'A year older');
     ledger.quietChanges.push(aged.change);
     current = aged.npc;
   }
@@ -168,7 +197,7 @@ function changeHealth(npc: Npc, ledger: Ledger, weekStart: string, dice: Dice): 
   } else if (!isIll && npc.health.condition < 100) {
     current = driftQuietly(current, ledger, 'health.condition', 2, 'Rest and time');
   }
-  const oldAgeChance = Math.max(0, current.age - 70) / 4;
+  const oldAgeChance = oldAgeDeathChance(current.age, current.lifeExpectancy);
   const cause = current.health.condition <= 0 ? current.health.ailments[0] ?? 'their injuries' : 'old age';
   const dies = current.health.condition <= 0 || dice.happens(oldAgeChance);
   return dies ? recordDeath(current, cause, weekStart) : current;
@@ -192,6 +221,9 @@ function summarizePeriod(npc: Npc, ledger: Ledger): string {
   if (ledger.quarrelsSettledCalmly) parts.push(`talked their way out of ${ledger.quarrelsSettledCalmly} quarrel${ledger.quarrelsSettledCalmly === 1 ? '' : 's'}`);
   if (ledger.familyEvenings) parts.push(`${ledger.familyEvenings} evenings with family`);
   if (ledger.timesWorshipped) parts.push(`attended worship ${ledger.timesWorshipped} times`);
+  if (ledger.moneyEarned || ledger.moneySpent) {
+    parts.push(`earned ${formatMoney(ledger.moneyEarned)} and spent ${formatMoney(ledger.moneySpent)}, leaving ${formatMoney(npc.purse)}`);
+  }
   return `${parts.join(', ')}.`;
 }
 

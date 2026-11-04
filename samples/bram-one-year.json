@@ -4,6 +4,7 @@
   "name": "Bram",
   "species": "human",
   "age": 40,
+  "lifeExpectancy": 70,
   "classification": "gentleman",
   "maritalStatus": "married",
   "backstory": "A blacksmith who took over his father's forge.",
@@ -20,6 +21,7 @@
     "ailments": [],
     "alive": true
   },
+  "purse": 2529,
   "temperament": {
     "disposition": 50,
     "honesty": 50,
@@ -29,27 +31,28 @@
   "social": {
     "societyRank": "commoner",
     "peerRank": 50,
-    "reputation": 55
+    "reputation": 52
   },
   "occupation": {
     "title": "blacksmith",
     "workplace": "the village forge",
     "role": "owner",
-    "experience": 62,
-    "workEthic": 80
+    "experience": 65,
+    "workEthic": 80,
+    "weeklyWage": 86
   },
   "relationships": [
     {
       "name": "Elsa",
       "kind": "spouse",
-      "affinity": 74
+      "affinity": 78
     }
   ],
   "affiliations": [
     {
       "name": "Chapel of Dawn",
       "kind": "church",
-      "standing": 53
+      "standing": 51
     }
   ],
   "creature": null,
@@ -73,33 +76,269 @@
       "summary": "Bram entered the world's records."
     },
     {
+      "at": "1200-04-15",
+      "kind": "change",
+      "summary": "Fell ill with a bad cough",
+      "changes": [
+        {
+          "field": "health.ailments",
+          "from": [],
+          "to": [
+            "a bad cough"
+          ],
+          "reason": "Fell ill with a bad cough"
+        }
+      ]
+    },
+    {
+      "at": "1200-04-15",
+      "kind": "change",
+      "summary": "Weakened by a bad cough",
+      "changes": [
+        {
+          "field": "health.condition",
+          "from": 100,
+          "to": 87,
+          "reason": "Weakened by a bad cough"
+        }
+      ]
+    },
+    {
+      "at": "1200-04-22",
+      "kind": "change",
+      "summary": "Recovered from a bad cough",
+      "changes": [
+        {
+          "field": "health.ailments",
+          "from": [
+            "a bad cough"
+          ],
+          "to": [],
+          "reason": "Recovered from a bad cough"
+        }
+      ]
+    },
+    {
+      "at": "1200-04-22",
+      "kind": "change",
+      "summary": "Getting their strength back",
+      "changes": [
+        {
+          "field": "health.condition",
+          "from": 87,
+          "to": 100,
+          "reason": "Getting their strength back"
+        }
+      ]
+    },
+    {
+      "at": "1200-05-27",
+      "kind": "change",
+      "summary": "Fell ill with a bad cough",
+      "changes": [
+        {
+          "field": "health.ailments",
+          "from": [],
+          "to": [
+            "a bad cough"
+          ],
+          "reason": "Fell ill with a bad cough"
+        }
+      ]
+    },
+    {
+      "at": "1200-05-27",
+      "kind": "change",
+      "summary": "Weakened by a bad cough",
+      "changes": [
+        {
+          "field": "health.condition",
+          "from": 100,
+          "to": 89,
+          "reason": "Weakened by a bad cough"
+        }
+      ]
+    },
+    {
+      "at": "1200-06-10",
+      "kind": "change",
+      "summary": "Recovered from a bad cough",
+      "changes": [
+        {
+          "field": "health.ailments",
+          "from": [
+            "a bad cough"
+          ],
+          "to": [],
+          "reason": "Recovered from a bad cough"
+        }
+      ]
+    },
+    {
+      "at": "1200-06-10",
+      "kind": "change",
+      "summary": "Getting their strength back",
+      "changes": [
+        {
+          "field": "health.condition",
+          "from": 86,
+          "to": 100,
+          "reason": "Getting their strength back"
+        }
+      ]
+    },
+    {
+      "at": "1200-07-22",
+      "kind": "change",
+      "summary": "Fell ill with a festering cut",
+      "changes": [
+        {
+          "field": "health.ailments",
+          "from": [],
+          "to": [
+            "a festering cut"
+          ],
+          "reason": "Fell ill with a festering cut"
+        }
+      ]
+    },
+    {
+      "at": "1200-07-22",
+      "kind": "change",
+      "summary": "Weakened by a festering cut",
+      "changes": [
+        {
+          "field": "health.condition",
+          "from": 100,
+          "to": 77,
+          "reason": "Weakened by a festering cut"
+        }
+      ]
+    },
+    {
+      "at": "1200-07-29",
+      "kind": "change",
+      "summary": "Recovered from a festering cut",
+      "changes": [
+        {
+          "field": "health.ailments",
+          "from": [
+            "a festering cut"
+          ],
+          "to": [],
+          "reason": "Recovered from a festering cut"
+        }
+      ]
+    },
+    {
+      "at": "1200-07-29",
+      "kind": "change",
+      "summary": "Getting their strength back",
+      "changes": [
+        {
+          "field": "health.condition",
+          "from": 77,
+          "to": 100,
+          "reason": "Getting their strength back"
+        }
+      ]
+    },
+    {
+      "at": "1200-11-04",
+      "kind": "change",
+      "summary": "Fell ill with stomach sickness",
+      "changes": [
+        {
+          "field": "health.ailments",
+          "from": [],
+          "to": [
+            "stomach sickness"
+          ],
+          "reason": "Fell ill with stomach sickness"
+        }
+      ]
+    },
+    {
+      "at": "1200-11-04",
+      "kind": "change",
+      "summary": "Weakened by stomach sickness",
+      "changes": [
+        {
+          "field": "health.condition",
+          "from": 100,
+          "to": 82,
+          "reason": "Weakened by stomach sickness"
+        }
+      ]
+    },
+    {
+      "at": "1200-11-11",
+      "kind": "change",
+      "summary": "Recovered from stomach sickness",
+      "changes": [
+        {
+          "field": "health.ailments",
+          "from": [
+            "stomach sickness"
+          ],
+          "to": [],
+          "reason": "Recovered from stomach sickness"
+        }
+      ]
+    },
+    {
+      "at": "1200-11-11",
+      "kind": "change",
+      "summary": "Getting their strength back",
+      "changes": [
+        {
+          "field": "health.condition",
+          "from": 82,
+          "to": 100,
+          "reason": "Getting their strength back"
+        }
+      ]
+    },
+    {
       "at": "1200-12-30",
       "kind": "period",
-      "summary": "From 1200-01-01 to 1200-12-30: Lived 52 weeks, worked 269 of 312 days as blacksmith, 104 evenings at the tavern, talked their way out of 5 quarrels, 156 evenings with family, attended worship 52 times.",
+      "summary": "From 1200-01-01 to 1200-12-30: Lived 52 weeks, worked 273 of 312 days as blacksmith, 104 evenings at the tavern, talked their way out of 2 quarrels, 156 evenings with family, attended worship 52 times, earned 36 gold, 8 silver, 1 copper and spent 13 gold, 5 silver, 2 copper, leaving 25 gold, 2 silver, 9 copper.",
       "changes": [
+        {
+          "field": "purse",
+          "from": 200,
+          "to": 2529,
+          "reason": "Wages earned, less living costs"
+        },
+        {
+          "field": "social.reputation",
+          "from": 50,
+          "to": 52,
+          "reason": "Kept their head in tavern quarrels"
+        },
         {
           "field": "occupation.experience",
           "from": 60,
-          "to": 62,
+          "to": 65,
           "reason": "Steady work built up experience"
         },
         {
           "field": "relationships.0.affinity",
           "from": 70,
-          "to": 74,
+          "to": 78,
           "reason": "Time spent together"
-        },
-        {
-          "field": "social.reputation",
-          "from": 50,
-          "to": 55,
-          "reason": "Kept their head in tavern quarrels"
         },
         {
           "field": "affiliations.0.standing",
           "from": 50,
-          "to": 53,
+          "to": 51,
           "reason": "Faithful attendance at worship"
+        },
+        {
+          "field": "health.condition",
+          "from": 89,
+          "to": 86,
+          "reason": "Still suffering from a bad cough"
         }
       ]
     }

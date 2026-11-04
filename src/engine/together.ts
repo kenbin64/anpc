@@ -1,5 +1,6 @@
 import { welcomeBirths } from './births';
-import { changeField, recordEvent, shiftDial } from './life-log';
+import { TREATMENT_COST, formatMoney } from './economy';
+import { changeField, changeFieldInto, recordEvent, shiftDial } from './life-log';
 import { LifeRun, beginLiving, canLiveAnotherWeek, finishLiving, liveWeek } from './life-simulator';
 import { decide } from './nature';
 import { Extra, Npc, RelationKind } from './npc.model';
@@ -64,10 +65,18 @@ export function offerCare(people: readonly Npc[], sickIndex: number, dice: Dice,
     const helperNpc = updated[helper.index];
     const decision = decide(helperNpc, 'asked-for-help', dice);
     const willing = decision.response === 'helps' && helper.affinity >= LEAST_AFFINITY_TO_HELP;
+    const canAfford = helperNpc.purse >= TREATMENT_COST;
     const surprise = decision.wentAgainstNature ? ', against their nature' : '';
-    if (willing) {
+    if (willing && !canAfford) {
+      updated[helper.index] = recordEvent(helperNpc, {
+        at, kind: 'choice', summary: `Wanted to pay for ${sickName}'s treatment for ${ailment}, but could not afford it.`,
+      });
+    } else if (willing) {
       updated[helper.index] = shiftDial(
-        recordEvent(helperNpc, { at, kind: 'choice', summary: `Paid for ${sickName}'s treatment for ${ailment}${surprise}.` }),
+        recordEvent(
+          { ...helperNpc, purse: helperNpc.purse - TREATMENT_COST },
+          { at, kind: 'choice', summary: `Paid ${formatMoney(TREATMENT_COST)} for ${sickName}'s treatment for ${ailment}${surprise}.` },
+        ),
         'social.reputation', 2, 'Known to look after their own', at,
       );
       updated[sickIndex] = shiftFeelingToward(
@@ -82,6 +91,31 @@ export function offerCare(people: readonly Npc[], sickIndex: number, dice: Dice,
       updated[sickIndex] = shiftFeelingToward(updated[sickIndex], helperNpc.id, -5, `${helperNpc.name} would not help`, at);
     }
   }
+  return updated;
+}
+
+/**
+ * WAGES INSIDE THE WORLD: when a worker's employer is also a full NPC, the employer really pays them.
+ * The worker's own week already counted the wage coming in; here it goes out of the employer's purse, so
+ * money moves between them instead of appearing from nowhere. It's part of the employer's routine, so it
+ * goes into their period summary, and an employer who can't cover their payroll falls into debt.
+ */
+function payWages(runs: LifeRun[]): LifeRun[] {
+  const updated = [...runs];
+  runs.forEach(workerRun => {
+    const worker = workerRun.npc;
+    const employerTie = worker.relationships.find(tie => tie.kind === 'employer' && tie.npcId);
+    const employerIndex = employerTie ? updated.findIndex(run => run.npc.id === employerTie.npcId) : -1;
+    const isEmployed = employerIndex >= 0 && worker.health.alive && worker.occupation !== null;
+    if (isEmployed) {
+      const employerRun = updated[employerIndex];
+      const paid = changeFieldInto(
+        employerRun.npc, 'purse', employerRun.npc.purse - worker.occupation!.weeklyWage, `Wages paid to ${worker.name}`,
+      );
+      employerRun.ledger.quietChanges.push(paid.change);
+      updated[employerIndex] = { ...employerRun, npc: paid.npc };
+    }
+  });
   return updated;
 }
 
@@ -107,6 +141,9 @@ export function advanceTogether(npcs: readonly Npc[], untilDate: string, dice: D
       const fellIll = before[index].health.ailments.length === 0 && person.health.ailments.length > 0;
       if (fellIll && person.health.alive) people = offerCare(people, index, dice, person.livedUntil);
     });
+    runs = runs.map((run, index) => ({ ...run, npc: people[index] }));
+    runs = payWages(runs);
+    people = runs.map(run => run.npc);
     const weekOf = people.map(person => person.livedUntil).sort().at(-1) ?? untilDate;
     const births = welcomeBirths(people, dice, weekOf);
     people = births.people;

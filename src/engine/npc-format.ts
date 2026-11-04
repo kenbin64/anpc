@@ -35,6 +35,8 @@ export function findProblems(candidate: unknown): string[] {
     const value = readPath(candidate, field);
     if (typeof value !== 'number' || value < 0 || value > 100) problems.push(`${field} must be a number from 0 to 100.`);
   }
+  if (typeof npc?.purse !== 'number' || !Number.isInteger(npc.purse)) problems.push('purse must be a whole number of coins.');
+  if (typeof npc?.lifeExpectancy !== 'number' || npc.lifeExpectancy <= 0) problems.push('lifeExpectancy must be a positive number.');
   for (const field of ['relationships', 'affiliations', 'abilities', 'lifeLog'] as const) {
     if (!Array.isArray(npc?.[field])) problems.push(`${field} must be a list.`);
   }

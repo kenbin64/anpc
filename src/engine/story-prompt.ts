@@ -20,6 +20,10 @@ export interface NpcRequest {
   seed: string;
   /** The time period. Medieval when left out. */
   era?: EraName;
+  /** Names already used in this world, so the new character gets one of their own. */
+  avoidNames?: string[];
+  /** Their age, rolled by code so a cast isn't all the same age. The story is written to fit it. */
+  age?: number;
 }
 
 export interface PromptMessage {
@@ -52,6 +56,7 @@ export function buildStoryPrompt(request: NpcRequest, numbers: RolledNumbers, is
     'The backstory is 3 to 5 sentences and must explain the character\'s temperament and standing.',
     'Give them 2 to 6 relationships (family where it fits, plus friends, enemies, rivals or customers),',
     '0 to 3 affiliations (church, guild, club or tavern) and 1 to 3 special abilities that suit them.',
+    'Set inDebt to true only if the backstory says they owe money.',
     'Affinity is 0 for hatred up to 100 for love. Routine counts are per week, 0 to 7. worshipDay is 0 to 6',
     '(0 is Sunday) or -1 if they do not worship.',
     isCreature
@@ -60,8 +65,12 @@ export function buildStoryPrompt(request: NpcRequest, numbers: RolledNumbers, is
   ].join(' ');
   const user = [
     `Classification: ${request.classification}.`,
+    request.age !== undefined ? `Age: ${request.age}. Write a life that fits that age.` : '',
     `Setting: ${request.setting || `a small ${request.era ?? 'medieval'} village`}.`,
     request.hints ? `Designer notes: ${request.hints}.` : '',
+    request.avoidNames?.length
+      ? `These names are already taken in this world, so use different first and family names: ${request.avoidNames.join(', ')}.`
+      : '',
     `Their nature, already decided by dice:`,
     `disposition ${describeDial(temperament.disposition, 'violent', 'rational')},`,
     `${describeDial(temperament.honesty, 'dishonest', 'honest')},`,

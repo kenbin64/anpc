@@ -1,5 +1,5 @@
 import { findProblems } from './npc-format';
-import { catchUpScenario, startScenario } from './scenario';
+import { catchUpScenario, recapSince, startScenario } from './scenario';
 import { createSettlement } from './settlement';
 import { readGameDate } from './world-clock';
 
@@ -53,6 +53,46 @@ describe('starting a scenario', () => {
 
     expect(fourRealDaysLater.npcs.every(npc => npc.livedUntil === '1200-01-29' || !npc.health.alive)).toBe(true);
     expect(fourRealDaysLater.npcs[0].lifeLog.some(event => event.kind === 'period')).toBe(true);
+  });
+
+  it('never goes back in time, even if the real clock does', async () => {
+    const scenario = await startScenario({
+      settlement: createSettlement('Ashford', 'town', 'a river valley'), startingCast: [], startingRoles: ['innkeeper'],
+    }, writer, '1200-01-01', new Date('2026-11-01T09:00:00Z'));
+    const later = catchUpScenario(scenario, new Date('2026-11-05T09:00:00Z'));
+    const clockTurnedBack = catchUpScenario(later, new Date('2026-11-02T09:00:00Z'));
+
+    expect(later.lastGameDate).toBe('1200-01-29');
+    expect(clockTurnedBack.lastGameDate).toBe('1200-01-29');
+  });
+
+  it('gives every new world its own dice, even from the same plan', async () => {
+    const plan = { settlement: createSettlement('Ashford', 'town', 'a river valley'), startingCast: [{ classification: 'rogue' as const, hints: '', seed: 'same' }], startingRoles: [] };
+    const first = await startScenario(plan, writer, '1200-01-01');
+    const second = await startScenario(plan, writer, '1200-01-01');
+    expect(first.worldSeed).not.toBe(second.worldSeed);
+    expect(first.npcs[0].temperament).not.toEqual(second.npcs[0].temperament);
+  });
+
+  it('can recap what happened since a date, oldest first', async () => {
+    const scenario = await startScenario({
+      settlement: createSettlement('Ashford', 'town', 'a river valley'), startingCast: [], startingRoles: ['innkeeper'],
+    }, writer, '1200-01-01', new Date('2026-11-01T09:00:00Z'));
+    const recap = recapSince(catchUpScenario(scenario, new Date('2026-11-20T09:00:00Z')), '1200-01-01');
+    expect(recap.length).toBeGreaterThan(0);
+    expect(recap.map(entry => entry.at)).toEqual([...recap.map(entry => entry.at)].sort());
+  });
+
+  it('locks the rules at launch; nothing can change them afterward', async () => {
+    const scenario = await startScenario({
+      settlement: createSettlement('Ashford', 'town', 'a river valley'), startingCast: [], startingRoles: [],
+      mode: 'game', objective: 'Find the stolen chalice',
+    }, writer, '1200-01-01');
+
+    expect(scenario.rules).toEqual({ mode: 'game', objective: 'Find the stolen chalice', era: 'medieval', scope: 'town', gameDaysPerRealDay: 7 });
+    expect(Object.isFrozen(scenario.rules)).toBe(true);
+    expect(Object.isFrozen(scenario.clock)).toBe(true);
+    expect(() => { (scenario.rules as { objective: string }).objective = 'Something else'; }).toThrow();
   });
 
   it('turns everyone the cast talks about into extras', async () => {
