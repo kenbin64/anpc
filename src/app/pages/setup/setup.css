@@ -1,0 +1,11 @@
+.setup { display: grid; gap: 1rem; max-width: 48rem; }
+fieldset { display: grid; gap: 0.6rem; margin: 0; }
+legend { font-family: var(--display); font-weight: 700; padding: 0 0.3rem; }
+.field { display: flex; flex-direction: column; gap: 0.25rem; }
+.field.narrow { max-width: 12rem; }
+.row { display: flex; gap: 1rem; flex-wrap: wrap; }
+.cast-entry { display: grid; grid-template-columns: 10rem 1fr auto; gap: 0.5rem; }
+.roles { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 0.35rem; }
+.role { display: flex; gap: 0.4rem; align-items: baseline; }
+.actions { display: flex; align-items: center; justify-content: flex-end; gap: 1rem; }
+@media (max-width: 40rem) { .cast-entry { grid-template-columns: 1fr; } }

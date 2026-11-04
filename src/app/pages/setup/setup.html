@@ -1,0 +1,134 @@
+<!--
+  [formRoot]   binds the whole form; on submit it checks every rule and calls launch() only if all pass.
+  [formField]  binds one field to one control. Selects, text, numbers and text areas all work the same.
+  @for over setupForm.cast   a list in the form: each entry is its own small field tree.
+  (change)     the role checkboxes use plain event binding and a linkedSignal, outside the form.
+-->
+<section class="page">
+  <h1>Set up a new world</h1>
+  <p class="muted">These are the rules of the world. Once you launch it, they're locked for good.</p>
+
+  <form [formRoot]="setupForm" class="setup">
+    <fieldset class="panel">
+      <legend>The world</legend>
+
+      <label class="field">World name
+        <input type="text" [formField]="setupForm.worldName" />
+      </label>
+      @for (error of setupForm.worldName().errors(); track error.kind) {
+        @if (setupForm.worldName().touched()) { <p class="error" role="alert">{{ error.message }}</p> }
+      }
+
+      <div class="row">
+        <label class="field">Mode
+          <select [formField]="setupForm.mode">
+            <option value="simulation">Simulation: no goal, just living</option>
+            <option value="game">Game: with an objective</option>
+          </select>
+        </label>
+        <label class="field">Era
+          <select disabled aria-describedby="era-note">
+            <option>Medieval</option>
+          </select>
+          <small id="era-note" class="muted">Other eras come as expansions.</small>
+        </label>
+        <label class="field">Scope
+          <select [formField]="setupForm.scope">
+            @for (scope of scopes; track scope) { <option [value]="scope">{{ scope }}</option> }
+          </select>
+        </label>
+      </div>
+
+      @if (setupForm.mode().value() === 'game') {
+        <label class="field">Objective
+          <input type="text" [formField]="setupForm.objective" placeholder="Find who stole the chalice from the chapel" />
+        </label>
+        @for (error of setupForm.objective().errors(); track error.kind) {
+          @if (setupForm.objective().touched()) { <p class="error" role="alert">{{ error.message }}</p> }
+        }
+      }
+
+      <label class="field">The place
+        <input type="text" [formField]="setupForm.setting" />
+      </label>
+
+      <label class="field narrow">Game days per real day
+        <input type="number" [formField]="setupForm.gameDaysPerRealDay" />
+      </label>
+      @for (error of setupForm.gameDaysPerRealDay().errors(); track error.kind) {
+        <p class="error" role="alert">{{ error.message }}</p>
+      }
+    </fieldset>
+
+    <fieldset class="panel">
+      <legend>Starting cast</legend>
+      <p class="muted">The people who get the ball rolling. The AI writes each one around your notes.</p>
+      @for (entry of setupForm.cast; track $index; let index = $index) {
+        <div class="cast-entry">
+          <select [formField]="entry.classification" [attr.aria-label]="'Classification for person ' + (index + 1)">
+            @for (kind of classifications; track kind) { <option [value]="kind">{{ kind }}</option> }
+          </select>
+          <input type="text" [formField]="entry.hints" placeholder="Who they are, in a sentence"
+                 [attr.aria-label]="'Notes for person ' + (index + 1)" />
+          <button type="button" class="ghost" (click)="removeCastMember(index)">Remove</button>
+        </div>
+        @for (error of entry.hints().errors(); track error.kind) { <p class="error" role="alert">{{ error.message }}</p> }
+      }
+      <button type="button" class="ghost" (click)="addCastMember()">Add a person</button>
+    </fieldset>
+
+    <fieldset class="panel">
+      <legend>Roles filled from the start</legend>
+      <p class="muted">Every other role stays implied until the story needs it.</p>
+      <div class="roles">
+        @for (role of roleChoices(); track role.title) {
+          <label class="role">
+            <input type="checkbox" [checked]="role.chosen" (change)="toggleRole(role.title)" />
+            {{ role.title }} <span class="muted">at {{ role.workplace }}</span>
+          </label>
+        }
+      </div>
+    </fieldset>
+
+    <fieldset class="panel">
+      <legend>Your character</legend>
+      <label class="field">Name
+        <input type="text" [formField]="setupForm.playerName" />
+      </label>
+      @for (error of setupForm.playerName().errors(); track error.kind) {
+        @if (setupForm.playerName().touched()) { <p class="error" role="alert">{{ error.message }}</p> }
+      }
+      <label class="field">How you look
+        <input type="text" [formField]="setupForm.playerDescription" placeholder="a road-worn sellsword with a scarred jaw" />
+      </label>
+      @for (error of setupForm.playerDescription().errors(); track error.kind) {
+        @if (setupForm.playerDescription().touched()) { <p class="error" role="alert">{{ error.message }}</p> }
+      }
+      <div class="row">
+        <label class="field">Standing
+          <select [formField]="setupForm.playerRank">
+            @for (rank of ranks; track rank) { <option [value]="rank">{{ rank }}</option> }
+          </select>
+        </label>
+        <label class="field narrow">Age
+          <input type="number" [formField]="setupForm.playerAge" />
+        </label>
+      </div>
+      @for (error of setupForm.playerAge().errors(); track error.kind) { <p class="error" role="alert">{{ error.message }}</p> }
+      <p class="muted">You start with about ten weeks' living money for your standing.</p>
+    </fieldset>
+
+    @if (launchError()) { <p class="error" role="alert">{{ launchError() }}</p> }
+    @if (aiStatus() === 'offline') {
+      <p class="error" role="alert">The local AI isn't answering. Start Ollama, then click the AI light at the top.</p>
+    }
+
+    <div class="actions">
+      @if (launching()) {
+        <p class="muted" role="status">Writing {{ charactersToWrite() }} characters with the AI. This takes about
+          {{ charactersToWrite() * 12 }} seconds...</p>
+      }
+      <button type="submit" [disabled]="launching()">Launch the world</button>
+    </div>
+  </form>
+</section>

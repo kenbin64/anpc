@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { unsavedChangesGuard } from './game/unsaved-changes.guard';
 import { worldExistsGuard } from './game/world-exists.guard';
 
 /**
@@ -23,6 +24,7 @@ export const routes: Routes = [
   {
     path: 'new',
     title: 'New world',
+    canDeactivate: [unsavedChangesGuard],
     loadComponent: () => import('./pages/setup/setup').then(m => m.Setup),
   },
   {
