@@ -58,6 +58,18 @@ const STARTING_DRAFT: SetupDraft = {
   playerAge: 25,
 };
 
+/**
+ * Says what actually went wrong. "Failed to fetch" means nothing is listening, so Ollama isn't running.
+ * An error answer means Ollama is running but the model failed, which a restart of Ollama usually fixes.
+ * Either way the form keeps everything the player entered, so they can press Launch again.
+ */
+function explainLaunchFailure(problem: Error): string {
+  const notRunning = problem.message.includes('Failed to fetch') || problem.message.includes('NetworkError');
+  return notRunning
+    ? 'The local AI is not running. Start Ollama, then press Launch again. Your setup is still here.'
+    : `The local AI failed while writing the characters. Quit and restart Ollama, then press Launch again; your setup is still here. (Details: ${problem.message.slice(0, 160)})`;
+}
+
 /** Roles ticked by default, so a new world opens with someone to talk to. */
 const DEFAULT_ROLES = ['innkeeper', 'alewife', 'blacksmith'];
 
@@ -168,7 +180,7 @@ export class Setup implements HasUnsavedChanges {
       this.launched = true;
       await this.router.navigate(['/play', id]);
     } catch (problem) {
-      this.launchError.set(`The world could not be written. Is Ollama running? (${(problem as Error).message})`);
+      this.launchError.set(explainLaunchFailure(problem as Error));
     } finally {
       this.launching.set(false);
     }
