@@ -1,0 +1,12 @@
+.who h1 { margin-bottom: 0.2rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1rem; margin: 1rem 0; }
+h2 { font-size: 1.05rem; margin: 0 0 0.5rem; }
+dl { display: grid; grid-template-columns: auto 1fr; gap: 0.2rem 0.75rem; margin: 0; }
+dt { color: var(--muted); text-transform: capitalize; }
+dd { margin: 0; }
+ul { margin: 0; padding-left: 1.1rem; }
+.log-heading { display: flex; justify-content: space-between; align-items: center; }
+.log { margin: 0.5rem 0 0; padding-left: 0; list-style: none; display: grid; gap: 0.35rem; }
+.when { font-family: var(--mono); color: var(--muted); }
+.kind { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid var(--line);
+        border-radius: 4px; padding: 0 0.3rem; }

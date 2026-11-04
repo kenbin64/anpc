@@ -1,0 +1,70 @@
+<!--
+  @if (record.value(); as npc)   unwraps the loaded person once and names it, so the rest of the template
+                                 reads `npc` instead of record.value() over and over.
+  [value] on the select          property binding keeps the dropdown showing the current filter.
+-->
+<section class="page">
+  <a [routerLink]="['/play', worldId()]">Back to the game</a>
+
+  @if (record.isLoading()) {
+    <p class="muted">Opening their record...</p>
+  } @else if (record.value(); as npc) {
+    <header class="who">
+      <h1>{{ npc.name }}</h1>
+      <p class="muted">
+        {{ npc.age }}-year-old {{ npc.species }} {{ npc.classification }}{{ npc.occupation ? ', ' + npc.occupation.title + ' at ' + npc.occupation.workplace : '' }}.
+        {{ npc.health.alive ? 'Alive.' : 'Died of ' + npc.health.death?.cause + '.' }}
+      </p>
+      <p>{{ npc.backstory }}</p>
+    </header>
+
+    <div class="grid">
+      <div class="panel">
+        <h2>Nature</h2>
+        <dl>
+          <dt>Temper</dt><dd>{{ npc.temperament.disposition }} <span class="muted">violent 0, rational 100</span></dd>
+          <dt>Honesty</dt><dd>{{ npc.temperament.honesty }}</dd>
+          <dt>Alignment</dt><dd>{{ npc.temperament.alignment }} <span class="muted">evil 0, good 100</span></dd>
+          <dt>Randomness</dt><dd>{{ npc.temperament.randomness }}</dd>
+          <dt>Health</dt><dd>{{ npc.health.condition }}{{ npc.health.ailments.length ? ', ' + npc.health.ailments.join(', ') : '' }}</dd>
+          <dt>Purse</dt><dd>{{ purse() }}</dd>
+          <dt>Standing</dt><dd>{{ npc.social.societyRank }}, reputation {{ npc.social.reputation }}</dd>
+        </dl>
+      </div>
+      <div class="panel">
+        <h2>Stats</h2>
+        <dl>
+          @for (key of statKeys; track key) {
+            <dt>{{ key }}</dt><dd>{{ npc.stats[key] }}</dd>
+          }
+        </dl>
+      </div>
+      <div class="panel">
+        <h2>People</h2>
+        <ul>
+          @for (tie of npc.relationships; track $index) {
+            <li>{{ tie.name }} <span class="muted">({{ tie.kind }}, {{ tie.affinity }})</span></li>
+          } @empty { <li class="muted">No one close.</li> }
+        </ul>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="log-heading">
+        <h2>Life log</h2>
+        <label>Show
+          <select [value]="filter()" (change)="chooseFilter($event)">
+            @for (kind of kinds; track kind) { <option [value]="kind">{{ kind }}</option> }
+          </select>
+        </label>
+      </div>
+      <ol class="log" reversed>
+        @for (event of shownEvents(); track $index) {
+          <li><span class="when">{{ event.at }}</span> <span class="kind">{{ event.kind }}</span> {{ event.summary }}</li>
+        } @empty { <li class="muted">Nothing of that kind yet.</li> }
+      </ol>
+    </div>
+  } @else {
+    <p class="error">There's no one by that id in this world.</p>
+  }
+</section>
