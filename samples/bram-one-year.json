@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "id": "npc-test",
+  "name": "Bram",
+  "species": "human",
+  "age": 40,
+  "classification": "gentleman",
+  "maritalStatus": "married",
+  "backstory": "A blacksmith who took over his father's forge.",
+  "stats": {
+    "strength": 16,
+    "dexterity": 10,
+    "constitution": 14,
+    "intelligence": 10,
+    "wisdom": 12,
+    "charisma": 10
+  },
+  "health": {
+    "condition": 100,
+    "ailments": [],
+    "alive": true
+  },
+  "temperament": {
+    "disposition": 50,
+    "honesty": 50,
+    "alignment": 50,
+    "randomness": 0
+  },
+  "social": {
+    "societyRank": "commoner",
+    "peerRank": 50,
+    "reputation": 55
+  },
+  "occupation": {
+    "title": "blacksmith",
+    "workplace": "the village forge",
+    "role": "owner",
+    "experience": 62,
+    "workEthic": 80
+  },
+  "relationships": [
+    {
+      "name": "Elsa",
+      "kind": "spouse",
+      "affinity": 74
+    }
+  ],
+  "affiliations": [
+    {
+      "name": "Chapel of Dawn",
+      "kind": "church",
+      "standing": 53
+    }
+  ],
+  "creature": null,
+  "abilities": [
+    {
+      "name": "Iron grip",
+      "description": "Never drops what he holds."
+    }
+  ],
+  "routine": {
+    "workDaysPerWeek": 6,
+    "tavernEveningsPerWeek": 2,
+    "familyEveningsPerWeek": 3,
+    "worshipDay": 0
+  },
+  "livedUntil": "1200-12-30",
+  "lifeLog": [
+    {
+      "at": "1200-01-01",
+      "kind": "created",
+      "summary": "Bram entered the world's records."
+    },
+    {
+      "at": "1200-12-30",
+      "kind": "period",
+      "summary": "From 1200-01-01 to 1200-12-30: Lived 52 weeks, worked 269 of 312 days as blacksmith, 104 evenings at the tavern, talked their way out of 5 quarrels, 156 evenings with family, attended worship 52 times.",
+      "changes": [
+        {
+          "field": "occupation.experience",
+          "from": 60,
+          "to": 62,
+          "reason": "Steady work built up experience"
+        },
+        {
+          "field": "relationships.0.affinity",
+          "from": 70,
+          "to": 74,
+          "reason": "Time spent together"
+        },
+        {
+          "field": "social.reputation",
+          "from": 50,
+          "to": 55,
+          "reason": "Kept their head in tavern quarrels"
+        },
+        {
+          "field": "affiliations.0.standing",
+          "from": 50,
+          "to": 53,
+          "reason": "Faithful attendance at worship"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,562 @@
+{
+  "$ref": "#/definitions/Npc",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Affiliation": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "#/definitions/AffiliationKind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "standing": {
+          "$ref": "#/definitions/Scale",
+          "description": "outsider (0) to pillar (100) of that church, guild, club or tavern."
+        }
+      },
+      "required": [
+        "name",
+        "kind",
+        "standing"
+      ],
+      "type": "object"
+    },
+    "AffiliationKind": {
+      "enum": [
+        "church",
+        "guild",
+        "club",
+        "tavern"
+      ],
+      "type": "string"
+    },
+    "Classification": {
+      "enum": [
+        "gentleman",
+        "noble",
+        "rogue",
+        "barbarian",
+        "thief",
+        "monster",
+        "animal",
+        "vagabond"
+      ],
+      "type": "string"
+    },
+    "CoreStats": {
+      "additionalProperties": false,
+      "description": "The usual character stats, 3 to 18.",
+      "properties": {
+        "charisma": {
+          "type": "number"
+        },
+        "constitution": {
+          "type": "number"
+        },
+        "dexterity": {
+          "type": "number"
+        },
+        "intelligence": {
+          "type": "number"
+        },
+        "strength": {
+          "type": "number"
+        },
+        "wisdom": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "strength",
+        "dexterity",
+        "constitution",
+        "intelligence",
+        "wisdom",
+        "charisma"
+      ],
+      "type": "object"
+    },
+    "CreatureTraits": {
+      "additionalProperties": false,
+      "description": "Only monsters and animals have these.",
+      "properties": {
+        "benevolence": {
+          "$ref": "#/definitions/Scale",
+          "description": "malevolent (0) through benign (50) to benevolent (100)."
+        },
+        "canSpeak": {
+          "type": "boolean"
+        },
+        "domestication": {
+          "$ref": "#/definitions/Scale",
+          "description": "wild (0) to domesticated (100)."
+        },
+        "intellect": {
+          "$ref": "#/definitions/Scale",
+          "description": "pure instinct (0) to fully intelligent (100)."
+        },
+        "social": {
+          "enum": [
+            "pack",
+            "loner"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "benevolence",
+        "canSpeak",
+        "intellect",
+        "domestication",
+        "social"
+      ],
+      "type": "object"
+    },
+    "FieldChange": {
+      "additionalProperties": false,
+      "description": "One change to one field, with the reason, so nothing about an NPC changes silently.",
+      "properties": {
+        "field": {
+          "type": "string"
+        },
+        "from": {},
+        "reason": {
+          "type": "string"
+        },
+        "to": {}
+      },
+      "required": [
+        "field",
+        "from",
+        "to",
+        "reason"
+      ],
+      "type": "object"
+    },
+    "Health": {
+      "additionalProperties": false,
+      "description": "HEALTH: autonomous NPCs can sicken, heal and die, on screen or off.\n\nHealth weighs on everything else. A sick or injured NPC is weaker, works less and has a shorter temper, but the base numbers stay as they were. The engine works out the weakened numbers when it needs them (see health.ts), so an NPC who recovers gets their old self back without anything being restored by hand.",
+      "properties": {
+        "ailments": {
+          "description": "Current illnesses and injuries, such as \"broken arm\" or \"winter fever\".",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "alive": {
+          "type": "boolean"
+        },
+        "caredForBy": {
+          "description": "Who is paying for their treatment while they're ill. Care makes recovery more likely.",
+          "type": "string"
+        },
+        "condition": {
+          "$ref": "#/definitions/Scale",
+          "description": "dying (0) to in perfect health (100)."
+        },
+        "death": {
+          "additionalProperties": false,
+          "description": "Set when they die: the game date and the cause.",
+          "properties": {
+            "at": {
+              "type": "string"
+            },
+            "cause": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "at",
+            "cause"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "condition",
+        "ailments",
+        "alive"
+      ],
+      "type": "object"
+    },
+    "LifeEvent": {
+      "additionalProperties": false,
+      "description": "One entry in the life log. `at` is a date in the game world, not the real world.\n\nThe log keeps what matters in play, not every moment. Fights, illness, choices, conversations, deaths and big changes get entries of their own. Ordinary weeks are rolled into one 'period' entry per stretch of living, so nothing is lost, but nothing important gets buried either.",
+      "properties": {
+        "at": {
+          "type": "string"
+        },
+        "changes": {
+          "items": {
+            "$ref": "#/definitions/FieldChange"
+          },
+          "type": "array"
+        },
+        "kind": {
+          "$ref": "#/definitions/LifeEventKind"
+        },
+        "summary": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "at",
+        "kind",
+        "summary"
+      ],
+      "type": "object"
+    },
+    "LifeEventKind": {
+      "description": "'period' is the one routine entry: a summary of a whole stretch of ordinary living, with the net change to every number that drifted. Every other kind is something important enough to matter in play.",
+      "enum": [
+        "created",
+        "period",
+        "work",
+        "family",
+        "social",
+        "conflict",
+        "choice",
+        "change",
+        "health",
+        "death"
+      ],
+      "type": "string"
+    },
+    "MaritalStatus": {
+      "enum": [
+        "single",
+        "betrothed",
+        "married",
+        "widowed",
+        "divorced"
+      ],
+      "type": "string"
+    },
+    "Npc": {
+      "additionalProperties": false,
+      "properties": {
+        "abilities": {
+          "items": {
+            "$ref": "#/definitions/SpecialAbility"
+          },
+          "type": "array"
+        },
+        "affiliations": {
+          "items": {
+            "$ref": "#/definitions/Affiliation"
+          },
+          "type": "array"
+        },
+        "age": {
+          "type": "number"
+        },
+        "backstory": {
+          "type": "string"
+        },
+        "classification": {
+          "$ref": "#/definitions/Classification"
+        },
+        "creature": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CreatureTraits"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "health": {
+          "$ref": "#/definitions/Health"
+        },
+        "id": {
+          "type": "string"
+        },
+        "lifeLog": {
+          "description": "Everything that ever happened to them or changed about them, oldest first.",
+          "items": {
+            "$ref": "#/definitions/LifeEvent"
+          },
+          "type": "array"
+        },
+        "livedUntil": {
+          "description": "The game date the NPC's life has been lived up to.",
+          "type": "string"
+        },
+        "maritalStatus": {
+          "$ref": "#/definitions/MaritalStatus"
+        },
+        "name": {
+          "type": "string"
+        },
+        "occupation": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Occupation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "relationships": {
+          "items": {
+            "$ref": "#/definitions/Relationship"
+          },
+          "type": "array"
+        },
+        "routine": {
+          "$ref": "#/definitions/Routine"
+        },
+        "schemaVersion": {
+          "type": "number"
+        },
+        "social": {
+          "$ref": "#/definitions/SocialStanding"
+        },
+        "species": {
+          "type": "string"
+        },
+        "stats": {
+          "$ref": "#/definitions/CoreStats"
+        },
+        "temperament": {
+          "$ref": "#/definitions/Temperament"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "id",
+        "name",
+        "species",
+        "age",
+        "classification",
+        "maritalStatus",
+        "backstory",
+        "stats",
+        "health",
+        "temperament",
+        "social",
+        "occupation",
+        "relationships",
+        "affiliations",
+        "creature",
+        "abilities",
+        "routine",
+        "livedUntil",
+        "lifeLog"
+      ],
+      "type": "object"
+    },
+    "Occupation": {
+      "additionalProperties": false,
+      "properties": {
+        "experience": {
+          "$ref": "#/definitions/Scale",
+          "description": "novice (0) to master (100)."
+        },
+        "role": {
+          "$ref": "#/definitions/WorkRole"
+        },
+        "title": {
+          "type": "string"
+        },
+        "workEthic": {
+          "$ref": "#/definitions/Scale",
+          "description": "lazy (0) to hard worker (100)."
+        },
+        "workplace": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "workplace",
+        "role",
+        "experience",
+        "workEthic"
+      ],
+      "type": "object"
+    },
+    "RelationKind": {
+      "enum": [
+        "spouse",
+        "child",
+        "parent",
+        "sibling",
+        "relative",
+        "friend",
+        "enemy",
+        "rival",
+        "customer",
+        "vendor",
+        "employer",
+        "employee",
+        "acquaintance"
+      ],
+      "type": "string"
+    },
+    "Relationship": {
+      "additionalProperties": false,
+      "description": "A tie to another person or creature. `npcId` is set once that one is a full ANPC. `extraId` is set while they're still an extra: known by name, never yet met on screen.",
+      "properties": {
+        "affinity": {
+          "$ref": "#/definitions/Scale",
+          "description": "hatred (0) to love (100)."
+        },
+        "extraId": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/definitions/RelationKind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "npcId": {
+          "type": "string"
+        },
+        "playerId": {
+          "description": "Set when the tie is to a human player's character.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "kind",
+        "affinity"
+      ],
+      "type": "object"
+    },
+    "Routine": {
+      "additionalProperties": false,
+      "description": "How a typical week of their life runs, in evenings and days.",
+      "properties": {
+        "familyEveningsPerWeek": {
+          "type": "number"
+        },
+        "tavernEveningsPerWeek": {
+          "type": "number"
+        },
+        "workDaysPerWeek": {
+          "type": "number"
+        },
+        "worshipDay": {
+          "description": "0 is Sunday. Absent if they don't attend worship.",
+          "type": "number"
+        }
+      },
+      "required": [
+        "workDaysPerWeek",
+        "tavernEveningsPerWeek",
+        "familyEveningsPerWeek"
+      ],
+      "type": "object"
+    },
+    "Scale": {
+      "description": "A dial from 0 to 100.",
+      "maximum": 100,
+      "minimum": 0,
+      "type": "number"
+    },
+    "SocialStanding": {
+      "additionalProperties": false,
+      "description": "Two ranks: where they stand in society, and where they stand among their own kind.",
+      "properties": {
+        "peerRank": {
+          "$ref": "#/definitions/Scale",
+          "description": "bottom (0) to leader (100) of their peer group."
+        },
+        "reputation": {
+          "$ref": "#/definitions/Scale",
+          "description": "despised (0) to celebrated (100)."
+        },
+        "societyRank": {
+          "$ref": "#/definitions/SocietyRank"
+        }
+      },
+      "required": [
+        "societyRank",
+        "peerRank",
+        "reputation"
+      ],
+      "type": "object"
+    },
+    "SocietyRank": {
+      "enum": [
+        "outcast",
+        "peasant",
+        "commoner",
+        "merchant",
+        "gentry",
+        "noble",
+        "royal"
+      ],
+      "type": "string"
+    },
+    "SpecialAbility": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "description"
+      ],
+      "type": "object"
+    },
+    "Temperament": {
+      "additionalProperties": false,
+      "description": "The dials that drive behavior.",
+      "properties": {
+        "alignment": {
+          "$ref": "#/definitions/Scale",
+          "description": "evil (0) to good (100)."
+        },
+        "disposition": {
+          "$ref": "#/definitions/Scale",
+          "description": "violent (0) to rational (100): how a conflict gets settled."
+        },
+        "honesty": {
+          "$ref": "#/definitions/Scale",
+          "description": "liar (0) to honest (100)."
+        },
+        "randomness": {
+          "$ref": "#/definitions/Scale",
+          "description": "loyal to their nature (0) to unpredictable (100): the chance of acting against type."
+        }
+      },
+      "required": [
+        "disposition",
+        "honesty",
+        "alignment",
+        "randomness"
+      ],
+      "type": "object"
+    },
+    "WorkRole": {
+      "enum": [
+        "owner",
+        "boss",
+        "worker",
+        "vendor",
+        "professional",
+        "tradesman",
+        "apprentice",
+        "none"
+      ],
+      "type": "string"
+    }
+  }
+}
